@@ -105,20 +105,14 @@ function getTasks() {
   return JSON.parse(localStorage.getItem("tasks") || "[]");
 }
 
-function addTask() {
-  const tasks = getTasks();
-  const newTask = {
-    name: document.getElementById("name").value,
-    desc: document.getElementById("desc").value,
-    start: document.getElementById("start").value,
-    end: document.getElementById("end").value,
-    priority: document.getElementById("priority").value,
-    kategori: document.getElementById("kategori").value,
-    status: document.getElementById("status").value,
-    notes: document.getElementById("notes").value,
-    done: false
-  };
-  tasks.push(newTask);
+let editingIndex = null;
+
+function addTask() {$1if (editingIndex !== null) {
+    tasks[editingIndex] = newTask;
+    editingIndex = null;
+  } else {
+    tasks.push(newTask);
+  }
   saveTasks(tasks);
   document.querySelector("form").reset();
 }
@@ -175,6 +169,7 @@ function renderCalendar() {
 }
 
 function deleteTask(index) {
+  if (!confirm("Apakah Anda yakin ingin menghapus tugas ini?")) return;
   const tasks = getTasks();
   tasks.splice(index, 1);
   saveTasks(tasks);
@@ -191,7 +186,8 @@ function editTask(index) {
   document.getElementById("kategori").value = task.kategori;
   document.getElementById("status").value = task.status;
   document.getElementById("notes").value = task.notes;
-  deleteTask(index);
+  editingIndex = index;
+}
 }
 
 document.addEventListener("DOMContentLoaded", () => {
