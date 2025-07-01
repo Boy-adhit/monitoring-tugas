@@ -70,9 +70,13 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.4/index.global.min.js"></script>
 
-  <script>
-  // Script JavaScript tetap disini dan akan menyatu dengan UI baru
-  // Bisa disisipkan ulang dari versi sebelumnya jika diperlukan
-  </script>
+ <script>
+function showTab(tabId) {
+  document.querySelectorAll("section").forEach(s => s.classList.add("hidden"));
+  document.getElementById(tabId).classList.remove("hidden");
+  document.querySelectorAll("nav button").forEach(b => b.classList.remove("bg-blue-500", "text-white"));
+  document.getElementById(`tab-${tabId}`).classList.add("bg-blue-500", "text-white");
+}
+</script>
 </body>
 </html>
