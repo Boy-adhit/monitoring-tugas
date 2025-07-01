@@ -83,7 +83,104 @@
   </section>
 
 <script>
-// (JS code tetap)
+// Navigasi tab dan fungsionalitas aplikasi
+let tasks = JSON.parse(localStorage.getItem("tasks") || "[]");
+function saveTasks() { localStorage.setItem("tasks", JSON.stringify(tasks)); }
+function showTab(tabId) {
+  document.querySelectorAll("section").forEach(s => s.classList.remove("active"));
+  document.getElementById(tabId).classList.add("active");
+  document.querySelectorAll("nav button").forEach(b => b.classList.remove("active"));
+  document.getElementById(`tab-${tabId}`).classList.add("active");
+  if (tabId === 'statistik') renderChart();
+  if (tabId === 'kalender') renderCalendar();
+  if (tabId === 'daftar') renderTasks();
+  if (tabId === 'arsip') renderArsip();
+}
+function addTask() {
+  const t = {
+    name: name.value, desc: desc.value, start: start.value, end: end.value,
+    priority: priority.value, kategori: kategori.value, status: status.value,
+    notes: notes.value, done: false
+  };
+  tasks.push(t); saveTasks(); document.querySelector("form").reset();
+  renderTasks(); renderAlerts(); renderChart();
+}
+function renderTasks() {
+  const list = document.getElementById("task-list");
+  list.innerHTML = "";
+  const fd = filterDate.value;
+  const fk = filterKategori.value;
+  tasks.filter(t => t.status !== "Selesai").forEach((t, i) => {
+    if ((fd && t.start !== fd && t.end !== fd) || (fk && t.kategori !== fk)) return;
+    const d = document.createElement("div");
+    d.className = `task-item ${t.done ? "done" : ""}`;
+    d.innerHTML = `
+      <strong>${t.name}</strong> (${t.priority}) [${t.kategori}]<br>
+      ${t.desc}<br>
+      ⏳ ${t.start} s/d ${t.end}<br>
+      <span contenteditable onblur="editNotes(${i}, this.innerText)">${t.notes}</span>
+      <div class="delete-btn" onclick="deleteTask(${i})">❌</div>
+      <div class="done-btn" onclick="toggleDone(${i})" title="Tandai selesai"></div>`;
+    list.appendChild(d);
+  });
+}
+function deleteTask(i) { tasks.splice(i, 1); saveTasks(); renderTasks(); renderChart(); renderAlerts(); }
+function toggleDone(i) {
+  tasks[i].done = !tasks[i].done;
+  if (tasks[i].done) tasks[i].status = "Selesai";
+  saveTasks(); renderTasks(); renderChart(); renderAlerts();
+}
+function editNotes(i, v) { tasks[i].notes = v; saveTasks(); }
+function renderAlerts() {
+  const wrap = document.getElementById("deadline-alerts");
+  wrap.innerHTML = "";
+  const now = new Date();
+  tasks.forEach(t => {
+    const end = new Date(t.end);
+    const days = (end - now) / (1000 * 60 * 60 * 24);
+    if (days <= 3 && t.status !== "Selesai") {
+      const d = document.createElement("div");
+      d.className = "notification";
+      d.innerText = `⏰ Deadline "${t.name}" tinggal ${Math.ceil(days)} hari`;
+      wrap.appendChild(d);
+    }
+  });
+}
+function renderChart() {
+  const ctx = document.getElementById("taskChart").getContext("2d");
+  const selesai = tasks.filter(t => t.status === "Selesai").length;
+  const belum = tasks.length - selesai;
+  if (window.taskChart) window.taskChart.destroy();
+  window.taskChart = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: ['Selesai', 'Belum'],
+      datasets: [{ data: [selesai, belum], backgroundColor: ['#16a34a', '#dc2626'] }]
+    }
+  });
+}
+function renderArsip() {
+  const a = document.getElementById("arsip-list");
+  a.innerHTML = "";
+  tasks.filter(t => t.status === "Selesai").forEach(t => {
+    const d = document.createElement("div");
+    d.className = "task-item done";
+    d.innerHTML = `<strong>${t.name}</strong><br>${t.desc}<br>📅 ${t.start} - ${t.end}<br>${t.notes}`;
+    a.appendChild(d);
+  });
+}
+function renderCalendar() {
+  const cal = document.getElementById("calendar");
+  cal.innerHTML = "";
+  const calendar = new FullCalendar.Calendar(cal, {
+    initialView: 'dayGridMonth',
+    events: tasks.map(t => ({ title: t.name, start: t.start, end: t.end, color: t.status === "Selesai" ? '#16a34a' : '#facc15' }))
+  });
+  calendar.render();
+}
+function filterByDate() { renderTasks(); }
+function resetFilter() { filterDate.value = ""; filterKategori.value = ""; renderTasks(); }
+renderTasks(); renderAlerts(); renderChart();
 </script>
 </body>
 </html>
