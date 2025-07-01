@@ -82,10 +82,13 @@
   <section id="kalender">
     <div id="calendar"></div>
   </section>
-
 <script>
 let tasks = JSON.parse(localStorage.getItem("tasks") || "[]");
-function saveTasks() { localStorage.setItem("tasks", JSON.stringify(tasks)); }
+
+function saveTasks() {
+  localStorage.setItem("tasks", JSON.stringify(tasks));
+}
+
 function showTab(tabId) {
   document.querySelectorAll("section").forEach(s => s.classList.remove("active"));
   document.getElementById(tabId).classList.add("active");
@@ -96,21 +99,26 @@ function showTab(tabId) {
   if (tabId === 'daftar') renderTasks();
   if (tabId === 'arsip') renderArsip();
 }
+
 function addTask() {
   const t = {
     name: name.value, desc: desc.value, start: start.value, end: end.value,
     priority: priority.value, kategori: kategori.value, status: status.value,
     notes: notes.value, done: false
   };
-  tasks.push(t); saveTasks(); document.querySelector("form").reset();
+  tasks.push(t);
+  saveTasks();
+  document.querySelector("form").reset();
   renderTasks(); renderAlerts(); renderChart();
 }
+
 function renderTasks() {
   const list = document.getElementById("task-list");
   list.innerHTML = "";
   const fd = filterDate.value;
   const fk = filterKategori.value;
-  tasks.filter(t => t.status !== "Selesai").forEach((t, i) => {
+  tasks.forEach((t, i) => {
+    if (t.status === "Selesai") return;
     if ((fd && t.start !== fd && t.end !== fd) || (fk && t.kategori !== fk)) return;
     const d = document.createElement("div");
     d.className = `task-item ${t.done ? "done" : ""}`;
@@ -124,13 +132,29 @@ function renderTasks() {
     list.appendChild(d);
   });
 }
-function deleteTask(i) { tasks.splice(i, 1); saveTasks(); renderTasks(); renderChart(); renderAlerts(); }
+
+function deleteTask(i) {
+  tasks.splice(i, 1);
+  saveTasks();
+  renderTasks();
+  renderChart();
+  renderAlerts();
+}
+
 function toggleDone(i) {
   tasks[i].done = !tasks[i].done;
   if (tasks[i].done) tasks[i].status = "Selesai";
-  saveTasks(); renderTasks(); renderChart(); renderAlerts();
+  saveTasks();
+  renderTasks();
+  renderChart();
+  renderAlerts();
 }
-function editNotes(i, v) { tasks[i].notes = v; saveTasks(); }
+
+function editNotes(i, v) {
+  tasks[i].notes = v;
+  saveTasks();
+}
+
 function renderAlerts() {
   const wrap = document.getElementById("deadline-alerts");
   wrap.innerHTML = "";
@@ -146,6 +170,7 @@ function renderAlerts() {
     }
   });
 }
+
 function renderChart() {
   const ctx = document.getElementById("taskChart").getContext("2d");
   const selesai = tasks.filter(t => t.status === "Selesai").length;
@@ -159,6 +184,7 @@ function renderChart() {
     }
   });
 }
+
 function renderArsip() {
   const a = document.getElementById("arsip-list");
   a.innerHTML = "";
@@ -169,19 +195,36 @@ function renderArsip() {
     a.appendChild(d);
   });
 }
+
 function renderCalendar() {
   const cal = document.getElementById("calendar");
   cal.innerHTML = "";
   const calendar = new FullCalendar.Calendar(cal, {
     initialView: 'dayGridMonth',
     height: 500,
-    events: tasks.map(t => ({ title: t.name, start: t.start, end: t.end, color: t.status === "Selesai" ? '#16a34a' : '#facc15' }))
+    events: tasks.map(t => ({
+      title: t.name,
+      start: t.start,
+      end: t.end,
+      color: t.status === "Selesai" ? '#16a34a' : '#facc15'
+    }))
   });
   calendar.render();
 }
-function filterByDate() { renderTasks(); }
-function resetFilter() { filterDate.value = ""; filterKategori.value = ""; renderTasks(); }
-renderTasks(); renderAlerts(); renderChart();
+
+function filterByDate() {
+  renderTasks();
+}
+
+function resetFilter() {
+  filterDate.value = "";
+  filterKategori.value = "";
+  renderTasks();
+}
+
+renderTasks();
+renderAlerts();
+renderChart();
 </script>
 </body>
 </html>
