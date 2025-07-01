@@ -19,6 +19,7 @@
     .notification { background: #facc15; color: #1e293b; padding: 8px; margin: 5px 0; border-radius: 5px; }
     .stats { max-width: 400px; margin: 20px auto; }
     .delete-btn { position: absolute; top: 10px; right: 10px; background: #dc2626; padding: 4px 8px; border-radius: 4px; color: white; cursor: pointer; }
+    .done-btn { position: absolute; bottom: 10px; right: 10px; background: #16a34a; padding: 4px 8px; border-radius: 4px; color: white; cursor: pointer; }
     .checkbox { margin-right: 8px; }
   </style>
 </head>
@@ -122,9 +123,7 @@ function renderTasks() {
         <div>⏳ ${t.start} s/d ${t.end}</div>
         <div contenteditable onblur="updateNotes(${i}, this.innerText)">${t.notes}</div>
         <span class="delete-btn" onclick="deleteTask(${i})">❌</span>
-        <div class="mt-2">
-          <label><input type="checkbox" class="checkbox" onchange="toggleDone(${i})" ${t.status === 'Selesai' ? 'checked' : ''}/> Tandai selesai</label>
-        </div>
+        <span class="done-btn" onclick="toggleDone(${i})">✅</span>
       `;
       if (t.status === "Selesai") arsip.appendChild(el);
       else list.appendChild(el);
@@ -196,9 +195,7 @@ function filterByDate() {
         <div>⏳ ${t.start} s/d ${t.end}</div>
         <div contenteditable onblur="updateNotes(${i}, this.innerText)">${t.notes}</div>
         <span class="delete-btn" onclick="deleteTask(${i})">❌</span>
-        <div class="mt-2">
-          <label><input type="checkbox" class="checkbox" onchange="toggleDone(${i})" ${t.status === 'Selesai' ? 'checked' : ''}/> Tandai selesai</label>
-        </div>
+        <span class="done-btn" onclick="toggleDone(${i})">✅</span>
       `;
       list.appendChild(el);
     }
