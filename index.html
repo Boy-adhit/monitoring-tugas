@@ -8,73 +8,86 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
-    body { font-family: Arial, sans-serif; padding: 20px; background: #f4f4f4; }
-    h1 { text-align: center; }
-    .stats, .notifications, .task-form, .filters { margin-bottom: 20px; }
-    .task-list { background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+    body { font-family: Arial, sans-serif; padding: 0; margin: 0; background: #f4f4f4; }
+    nav { background: #007bff; padding: 10px; display: flex; justify-content: space-around; }
+    nav button { background: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer; font-weight: bold; }
+    nav button.active { background: #0056b3; color: white; }
+    section { display: none; padding: 20px; }
+    section.active { display: block; }
+    .task-list, .stats, .notifications, .task-form, .filters { margin-bottom: 20px; background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
     .task-item { border-bottom: 1px solid #eee; padding: 10px 0; }
     .task-item:last-child { border-bottom: none; }
     label { display: block; margin-top: 10px; }
     input, select, textarea { width: 100%; padding: 8px; margin-top: 5px; }
-    button { margin-top: 10px; padding: 10px 15px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; }
-    button:hover { background: #0056b3; }
+    button.task { margin-top: 10px; padding: 10px 15px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; }
+    button.task:hover { background: #0056b3; }
     .done { text-decoration: line-through; color: gray; }
     .notification { background: #fff3cd; padding: 10px; margin-bottom: 10px; border-left: 5px solid #ffc107; }
     canvas { max-width: 500px; margin: auto; }
-    .archived { opacity: 0.6; }
   </style>
 </head>
 <body>
-  <h1>📋 Monitoring Tugas</h1>
+  <nav>
+    <button onclick="showTab('dashboard')" id="tab-dashboard" class="active">📊 Statistik</button>
+    <button onclick="showTab('tugas')" id="tab-tugas">📝 Daftar Tugas</button>
+    <button onclick="showTab('arsip')" id="tab-arsip">🗂️ Arsip</button>
+  </nav>
 
-  <div class="stats">
-    <h2>📊 Statistik Progres</h2>
-    <p>Total Tugas: <span id="total-tugas">0</span></p>
-    <p>Selesai: <span id="selesai-tugas">0</span></p>
-    <p>Belum: <span id="belum-tugas">0</span></p>
-    <canvas id="taskChart" width="400" height="200"></canvas>
-    <button onclick="exportToExcel()">📁 Export ke Excel</button>
-  </div>
+  <section id="dashboard" class="active">
+    <h1>📋 Monitoring Tugas</h1>
+    <div class="stats">
+      <h2>📊 Statistik Progres</h2>
+      <p>Total Tugas: <span id="total-tugas">0</span></p>
+      <p>Selesai: <span id="selesai-tugas">0</span></p>
+      <p>Belum: <span id="belum-tugas">0</span></p>
+      <canvas id="taskChart" width="400" height="200"></canvas>
+      <button class="task" onclick="exportToExcel()">📁 Export ke Excel</button>
+    </div>
 
-  <div class="notifications" id="deadline-alerts"></div>
+    <div class="notifications" id="deadline-alerts"></div>
 
-  <div class="filters">
-    <h3>🔎 Filter Tanggal Deadline</h3>
-    <label>Dari Tanggal: <input type="date" id="filter-start"></label>
-    <label>Sampai Tanggal: <input type="date" id="filter-end"></label>
-    <button onclick="applyDateFilter()">Terapkan Filter</button>
-    <button onclick="clearDateFilter()">Hapus Filter</button>
-  </div>
+    <div class="task-form">
+      <h2>Tambah Tugas</h2>
+      <label>Nama Tugas <input id="task-name" type="text"></label>
+      <label>Deskripsi <textarea id="task-desc"></textarea></label>
+      <label>Tanggal Mulai <input id="start-date" type="date"></label>
+      <label>Deadline <input id="end-date" type="date"></label>
+      <label>Prioritas 
+        <select id="priority">
+          <option value="Tinggi">Tinggi</option>
+          <option value="Sedang">Sedang</option>
+          <option value="Rendah">Rendah</option>
+        </select>
+      </label>
+      <label>Status
+        <select id="status">
+          <option value="Belum">Belum</option>
+          <option value="Sedang">Sedang</option>
+          <option value="Selesai">Selesai</option>
+        </select>
+      </label>
+      <label>Catatan <textarea id="notes"></textarea></label>
+      <button class="task" onclick="addTask()">Tambah Tugas</button>
+    </div>
+  </section>
 
-  <div class="task-form">
-    <h2>Tambah Tugas</h2>
-    <label>Nama Tugas <input id="task-name" type="text"></label>
-    <label>Deskripsi <textarea id="task-desc"></textarea></label>
-    <label>Tanggal Mulai <input id="start-date" type="date"></label>
-    <label>Deadline <input id="end-date" type="date"></label>
-    <label>Prioritas 
-      <select id="priority">
-        <option value="Tinggi">Tinggi</option>
-        <option value="Sedang">Sedang</option>
-        <option value="Rendah">Rendah</option>
-      </select>
-    </label>
-    <label>Status
-      <select id="status">
-        <option value="Belum">Belum</option>
-        <option value="Sedang">Sedang</option>
-        <option value="Selesai">Selesai</option>
-      </select>
-    </label>
-    <label>Catatan <textarea id="notes"></textarea></label>
-    <button onclick="addTask()">Tambah Tugas</button>
-  </div>
+  <section id="tugas">
+    <div class="filters">
+      <h3>🔎 Filter Tanggal Deadline</h3>
+      <label>Dari Tanggal: <input type="date" id="filter-start"></label>
+      <label>Sampai Tanggal: <input type="date" id="filter-end"></label>
+      <button class="task" onclick="applyDateFilter()">Terapkan Filter</button>
+      <button class="task" onclick="clearDateFilter()">Hapus Filter</button>
+    </div>
 
-  <h3>📌 Daftar Tugas</h3>
-  <div class="task-list" id="task-list"></div>
+    <h3>📌 Daftar Tugas</h3>
+    <div class="task-list" id="task-list"></div>
+  </section>
 
-  <h3>🗂️ Arsip Tugas</h3>
-  <div class="task-list" id="archived-list"></div>
+  <section id="arsip">
+    <h3>🗂️ Arsip Tugas</h3>
+    <div class="task-list" id="archived-list"></div>
+  </section>
 
   <script>
     let tasks = JSON.parse(localStorage.getItem('tasks') || '[]');
@@ -82,6 +95,13 @@
 
     function saveTasks() {
       localStorage.setItem('tasks', JSON.stringify(tasks));
+    }
+
+    function showTab(tab) {
+      document.querySelectorAll('section').forEach(s => s.classList.remove('active'));
+      document.querySelector(`#${tab}`).classList.add('active');
+      document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+      document.querySelector(`#tab-${tab}`).classList.add('active');
     }
 
     function exportToExcel() {
@@ -150,8 +170,8 @@
           ${task.desc}<br>
           📅 ${task.start} - ${task.end} | 🔥 ${task.priority} | 📌 ${task.status}<br>
           📝 ${task.notes}<br>
-          <button onclick="markDone(${i})">Tandai Selesai</button>
-          <button onclick="deleteTask(${i})">Hapus</button>
+          <button class="task" onclick="markDone(${i})">Tandai Selesai</button>
+          <button class="task" onclick="deleteTask(${i})">Hapus</button>
         `;
         if (selesai7hari) {
           archived.appendChild(div);
