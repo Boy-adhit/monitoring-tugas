@@ -21,6 +21,7 @@
     .done { text-decoration: line-through; color: gray; }
     .notification { background: #fff3cd; padding: 10px; margin-bottom: 10px; border-left: 5px solid #ffc107; }
     canvas { max-width: 500px; margin: auto; }
+    .archived { opacity: 0.6; }
   </style>
 </head>
 <body>
@@ -36,6 +37,14 @@
   </div>
 
   <div class="notifications" id="deadline-alerts"></div>
+
+  <div class="filters">
+    <h3>🔎 Filter Tanggal Deadline</h3>
+    <label>Dari Tanggal: <input type="date" id="filter-start"></label>
+    <label>Sampai Tanggal: <input type="date" id="filter-end"></label>
+    <button onclick="applyDateFilter()">Terapkan Filter</button>
+    <button onclick="clearDateFilter()">Hapus Filter</button>
+  </div>
 
   <div class="task-form">
     <h2>Tambah Tugas</h2>
@@ -61,24 +70,27 @@
     <button onclick="addTask()">Tambah Tugas</button>
   </div>
 
-  <div class="filters">
-    <label>Filter Status:
-      <select onchange="filterTasks(this.value)">
-        <option value="All">Semua</option>
-        <option value="Belum">Belum</option>
-        <option value="Sedang">Sedang</option>
-        <option value="Selesai">Selesai</option>
-      </select>
-    </label>
-  </div>
-
+  <h3>📌 Daftar Tugas</h3>
   <div class="task-list" id="task-list"></div>
+
+  <h3>🗂️ Arsip Tugas</h3>
+  <div class="task-list" id="archived-list"></div>
 
   <script>
     let tasks = JSON.parse(localStorage.getItem('tasks') || '[]');
+    let filterStart = '', filterEnd = '';
 
     function saveTasks() {
       localStorage.setItem('tasks', JSON.stringify(tasks));
+    }
+
+    function exportToExcel() {
+      const ws_data = [['Nama', 'Deskripsi', 'Tanggal Mulai', 'Deadline', 'Prioritas', 'Status', 'Catatan']];
+      tasks.forEach(t => ws_data.push([t.name, t.desc, t.start, t.end, t.priority, t.status, t.notes]));
+      const wb = XLSX.utils.book_new();
+      const ws = XLSX.utils.aoa_to_sheet(ws_data);
+      XLSX.utils.book_append_sheet(wb, ws, 'Tugas');
+      XLSX.writeFile(wb, 'Daftar_Tugas.xlsx');
     }
 
     function renderStats() {
@@ -105,38 +117,48 @@
     }
 
     function renderNotifications() {
+      const now = new Date();
       const container = document.getElementById('deadline-alerts');
       container.innerHTML = '';
-      const now = new Date();
       tasks.forEach(task => {
         const deadline = new Date(task.end);
-        const diffDays = Math.ceil((deadline - now) / (1000 * 60 * 60 * 24));
-        if (diffDays >= 0 && diffDays <= 2 && task.status !== 'Selesai') {
-          const alert = document.createElement('div');
-          alert.className = 'notification';
-          alert.textContent = `⚠️ Tugas "${task.name}" mendekati deadline (${task.end})!`;
-          container.appendChild(alert);
+        const diff = (deadline - now) / (1000 * 60 * 60 * 24);
+        if (task.status !== 'Selesai' && diff <= 2 && diff >= 0) {
+          const div = document.createElement('div');
+          div.className = 'notification';
+          div.textContent = `⚠️ Tugas "${task.name}" mendekati deadline (${task.end})!`;
+          container.appendChild(div);
         }
       });
     }
 
-    function renderTasks(filter = 'All') {
+    function renderTasks() {
       const list = document.getElementById('task-list');
+      const archived = document.getElementById('archived-list');
       list.innerHTML = '';
-      tasks.filter(task => filter === 'All' || task.status === filter)
-        .forEach((task, i) => {
-          const div = document.createElement('div');
-          div.className = 'task-item';
-          div.innerHTML = `
-            <strong class="${task.status === 'Selesai' ? 'done' : ''}">${task.name}</strong><br>
-            ${task.desc}<br>
-            📅 ${task.start} - ${task.end} | 🔥 ${task.priority} | 📌 ${task.status}<br>
-            📝 ${task.notes}<br>
-            <button onclick="markDone(${i})">Tandai Selesai</button>
-            <button onclick="deleteTask(${i})">Hapus</button>
-          `;
+      archived.innerHTML = '';
+      const now = new Date();
+      tasks.forEach((task, i) => {
+        const deadline = new Date(task.end);
+        const selesai7hari = task.status === 'Selesai' && (now - deadline) > (7 * 86400000);
+        const masukFilter = (!filterStart || new Date(task.end) >= new Date(filterStart)) &&
+                            (!filterEnd || new Date(task.end) <= new Date(filterEnd));
+        const div = document.createElement('div');
+        div.className = 'task-item';
+        div.innerHTML = `
+          <strong class="${task.status === 'Selesai' ? 'done' : ''}">${task.name}</strong><br>
+          ${task.desc}<br>
+          📅 ${task.start} - ${task.end} | 🔥 ${task.priority} | 📌 ${task.status}<br>
+          📝 ${task.notes}<br>
+          <button onclick="markDone(${i})">Tandai Selesai</button>
+          <button onclick="deleteTask(${i})">Hapus</button>
+        `;
+        if (selesai7hari) {
+          archived.appendChild(div);
+        } else if (masukFilter) {
           list.appendChild(div);
-        });
+        }
+      });
       renderStats();
       renderNotifications();
     }
@@ -171,17 +193,18 @@
       }
     }
 
-    function filterTasks(val) {
-      renderTasks(val);
+    function applyDateFilter() {
+      filterStart = document.getElementById('filter-start').value;
+      filterEnd = document.getElementById('filter-end').value;
+      renderTasks();
     }
 
-    function exportToExcel() {
-      const ws_data = [['Nama', 'Deskripsi', 'Tanggal Mulai', 'Deadline', 'Prioritas', 'Status', 'Catatan']];
-      tasks.forEach(t => ws_data.push([t.name, t.desc, t.start, t.end, t.priority, t.status, t.notes]));
-      const wb = XLSX.utils.book_new();
-      const ws = XLSX.utils.aoa_to_sheet(ws_data);
-      XLSX.utils.book_append_sheet(wb, ws, 'Tugas');
-      XLSX.writeFile(wb, 'Daftar_Tugas.xlsx');
+    function clearDateFilter() {
+      filterStart = '';
+      filterEnd = '';
+      document.getElementById('filter-start').value = '';
+      document.getElementById('filter-end').value = '';
+      renderTasks();
     }
 
     renderTasks();
