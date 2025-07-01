@@ -22,6 +22,7 @@
     .done-btn { position: absolute; bottom: 10px; right: 10px; background: #16a34a; padding: 4px 8px; border-radius: 4px; color: white; cursor: pointer; }
     .done-btn::before { content: "\2713"; font-weight: bold; }
     .checkbox { margin-right: 8px; }
+    #calendar { max-width: 100%; margin: 0 auto; background: white; color: black; padding: 10px; border-radius: 10px; }
   </style>
 </head>
 <body>
@@ -83,7 +84,6 @@
   </section>
 
 <script>
-// Navigasi tab dan fungsionalitas aplikasi
 let tasks = JSON.parse(localStorage.getItem("tasks") || "[]");
 function saveTasks() { localStorage.setItem("tasks", JSON.stringify(tasks)); }
 function showTab(tabId) {
@@ -91,7 +91,7 @@ function showTab(tabId) {
   document.getElementById(tabId).classList.add("active");
   document.querySelectorAll("nav button").forEach(b => b.classList.remove("active"));
   document.getElementById(`tab-${tabId}`).classList.add("active");
-  if (tabId === 'statistik') renderChart();
+  if (tabId === 'statistik') { renderChart(); renderAlerts(); }
   if (tabId === 'kalender') renderCalendar();
   if (tabId === 'daftar') renderTasks();
   if (tabId === 'arsip') renderArsip();
@@ -174,6 +174,7 @@ function renderCalendar() {
   cal.innerHTML = "";
   const calendar = new FullCalendar.Calendar(cal, {
     initialView: 'dayGridMonth',
+    height: 500,
     events: tasks.map(t => ({ title: t.name, start: t.start, end: t.end, color: t.status === "Selesai" ? '#16a34a' : '#facc15' }))
   });
   calendar.render();
