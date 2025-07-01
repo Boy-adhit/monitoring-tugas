@@ -67,7 +67,17 @@
     </section>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js">function renderArsip() {
+  const arsipList = document.getElementById("arsip-list");
+  const arsipTasks = getTasks().filter(t => t.status === "Selesai" || t.status === "Arsip");
+  arsipList.innerHTML = arsipTasks.map(t => `
+    <div class="bg-gray-200 p-3 rounded">
+      <div class="font-semibold">\${t.name}</div>
+      <div class="text-sm text-gray-600">\${t.desc}</div>
+    </div>
+  `).join("");
+}
+</script>
   <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.4/index.global.min.js"></script>
 
   <script>
@@ -76,6 +86,12 @@ function showTab(tabId) {
   document.getElementById(tabId).classList.remove("hidden");
   document.querySelectorAll("nav button").forEach(b => b.classList.remove("bg-blue-500", "text-white"));
   document.getElementById(`tab-${tabId}`).classList.add("bg-blue-500", "text-white");
+
+  if (tabId === "daftar") renderTasks();
+  if (tabId === "statistik") renderStats();
+  if (tabId === "kalender") renderCalendar();
+  if (tabId === "arsip") renderArsip();
+}`).classList.add("bg-blue-500", "text-white");
 }
 document.addEventListener('DOMContentLoaded', function () {
   const calendarEl = document.getElementById('calendar');
@@ -149,10 +165,17 @@ function renderStats() {
   });
 }
 
+let calendarInstance = null;
+
 function renderCalendar() {
   const calendarEl = document.getElementById('calendar');
   calendarEl.innerHTML = '';
-  const calendar = new FullCalendar.Calendar(calendarEl, {
+
+  if (calendarInstance) {
+    calendarInstance.destroy();
+  }
+
+  calendarInstance = new FullCalendar.Calendar(calendarEl, {
     initialView: 'dayGridMonth',
     headerToolbar: {
       left: 'prev,next today',
@@ -165,7 +188,7 @@ function renderCalendar() {
       end: task.end || task.start
     }))
   });
-  calendar.render();
+  calendarInstance.render();
 }
 
 function deleteTask(index) {
@@ -192,6 +215,7 @@ document.addEventListener("DOMContentLoaded", () => {
   renderTasks();
   renderStats();
   renderCalendar();
+  renderArsip();
 });
 </script>
 </body>
