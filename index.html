@@ -81,6 +81,7 @@ let tasks = JSON.parse(localStorage.getItem("tasks") || "[]");
 function saveTasks() {
   localStorage.setItem("tasks", JSON.stringify(tasks));
   renderTasks();
+  renderDeadlineAlerts();
 }
 
 function addTask() {
@@ -116,6 +117,27 @@ function renderTasks() {
     `;
     if (t.status === "Selesai") arsip.appendChild(el);
     else list.appendChild(el);
+  });
+  renderDeadlineAlerts();
+}
+
+function renderDeadlineAlerts() {
+  const alertBox = document.getElementById("deadline-alerts");
+  if (!alertBox) return;
+  alertBox.innerHTML = "";
+
+  const today = new Date();
+  tasks.forEach(t => {
+    const endDate = new Date(t.end);
+    const diffTime = endDate - today;
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    if (diffDays <= 3 && diffDays >= 0 && t.status !== "Selesai") {
+      const alert = document.createElement("div");
+      alert.className = "notification";
+      alert.textContent = `⏰ Deadline "${t.name}" tinggal ${diffDays} hari`;
+      alertBox.appendChild(alert);
+    }
   });
 }
 
