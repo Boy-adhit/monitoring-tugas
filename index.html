@@ -81,20 +81,11 @@
   <button onclick="showTab('arsip')" id="tab-arsip">🗂️ Arsip</button>
   <button onclick="showTab('kalender')" id="tab-kalender">📅 Kalender</button>
 </nav>
-
 <section id="dashboard" class="active">
   <h1>Monitoring Tugas</h1>
   <div class="stats"><canvas id="taskChart"></canvas></div>
   <div class="notifications" id="deadline-alerts"></div>
-</section>
 
-<section id="tugas">
-  <div class="filters">
-    <label>Filter berdasarkan tanggal
-      <input type="date" id="filter-date">
-    </label>
-    <button class="task" onclick="resetFilter()">Reset</button>
-  </div>
   <div class="task-form">
     <label>Nama Tugas<input id="task-name"></label>
     <label>Deskripsi<textarea id="task-desc"></textarea></label>
@@ -117,6 +108,15 @@
     <label>Catatan<textarea id="notes"></textarea></label>
     <button class="task" onclick="addTask()">Tambah Tugas</button>
     <button class="task" onclick="exportToExcel()">📁 Export ke Excel</button>
+  </div>
+</section>
+
+<section id="tugas">
+  <div class="filters">
+    <label>Filter berdasarkan tanggal
+      <input type="date" id="filter-date">
+    </label>
+    <button class="task" onclick="resetFilter()">Reset</button>
   </div>
   <div class="task-list" id="task-list"></div>
 </section>
