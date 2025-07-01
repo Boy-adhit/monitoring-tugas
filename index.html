@@ -100,6 +100,19 @@ function deleteTask(index) {
   }
 }
 
+function toggleStatus(index) {
+  tasks[index].status = tasks[index].status === "Selesai" ? "Belum" : "Selesai";
+  saveTasks();
+}
+
+function editNotes(index) {
+  const newNote = prompt("Edit Catatan:", tasks[index].notes);
+  if (newNote !== null) {
+    tasks[index].notes = newNote;
+    saveTasks();
+  }
+}
+
 function renderTasks() {
   const now = new Date();
   let selesai = 0, belum = 0;
@@ -112,14 +125,17 @@ function renderTasks() {
     const e = document.createElement("div");
     e.className = "task-item" + (t.status === "Selesai" ? " done" : "");
     e.innerHTML = `
-      <div style="display:flex; justify-content:space-between;">
+      <div style="display:flex; justify-content:space-between; align-items: start;">
         <div>
           <strong>${t.name}</strong> (${t.priority})<br>
           ${t.desc}<br>
           ⏳ ${t.start} s/d ${t.end}<br>
-          ${t.notes}
+          <span onclick="editNotes(${index})" style="cursor:pointer;">${t.notes}</span>
         </div>
-        <button onclick="deleteTask(${index})" style="background:#ef4444;color:white;border:none;border-radius:5px;height:30px;cursor:pointer;">❌</button>
+        <div class="flex flex-col items-end space-y-1">
+          <button onclick="toggleStatus(${index})" style="background:#10b981;color:white;border:none;border-radius:5px;height:30px;width:30px;">✔</button>
+          <button onclick="deleteTask(${index})" style="background:#ef4444;color:white;border:none;border-radius:5px;height:30px;width:30px;">❌</button>
+        </div>
       </div>`;
     const ed = new Date(t.end);
     const isArsip = t.status === "Selesai" && (now - ed) / 86400000 > 7;
@@ -161,14 +177,17 @@ function filterByDate() {
       const e = document.createElement("div");
       e.className = "task-item" + (t.status === "Selesai" ? " done" : "");
       e.innerHTML = `
-        <div style="display:flex; justify-content:space-between;">
+        <div style="display:flex; justify-content:space-between; align-items: start;">
           <div>
             <strong>${t.name}</strong> (${t.priority})<br>
             ${t.desc}<br>
             ⏳ ${t.start} s/d ${t.end}<br>
-            ${t.notes}
+            <span onclick="editNotes(${index})" style="cursor:pointer;">${t.notes}</span>
           </div>
-          <button onclick="deleteTask(${index})" style="background:#ef4444;color:white;border:none;border-radius:5px;height:30px;cursor:pointer;">❌</button>
+          <div class="flex flex-col items-end space-y-1">
+            <button onclick="toggleStatus(${index})" style="background:#10b981;color:white;border:none;border-radius:5px;height:30px;width:30px;">✔</button>
+            <button onclick="deleteTask(${index})" style="background:#ef4444;color:white;border:none;border-radius:5px;height:30px;width:30px;">❌</button>
+          </div>
         </div>`;
       list.appendChild(e);
     }
