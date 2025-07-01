@@ -1,12 +1,10 @@
-
 <!DOCTYPE html>
-
 <html lang="id">
 <head>
-<meta charset="utf-8"/>
-<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>Monitoring Tugas</title>
-<script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Monitoring Tugas</title>
+  <script>
     const AUTH_PASSWORD = "boy123";
     if (!sessionStorage.getItem("authenticated")) {
       const pass = prompt("Masukkan password untuk mengakses Monitoring Tugas:");
@@ -18,14 +16,14 @@
       }
     }
   </script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css" rel="stylesheet"/>
-<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
-<style>
-    body { font-family: Arial, sans-serif; padding: 0; margin: 0; background: #1e293b; color: #f1f5f9; }
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; background: #1e293b; color: #f1f5f9; }
     nav { background: #0f172a; padding: 10px; display: flex; justify-content: space-around; flex-wrap: wrap; }
-    nav button { background: #334155; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer; font-weight: bold; color: #f1f5f9; }
+    nav button { background: #334155; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer; color: #f1f5f9; }
     nav button.active { background: #0ea5e9; color: white; }
     section { display: none; padding: 20px; }
     section.active { display: block; }
@@ -34,15 +32,19 @@
       background: #334155;
       padding: 15px;
       border-radius: 8px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.4);
     }
     .task-item { border-bottom: 1px solid #475569; padding: 10px 0; }
     .task-item:last-child { border-bottom: none; }
-    label { display: block; margin-top: 10px; color: #f1f5f9; }
+    label { display: block; margin-top: 10px; }
     input, select, textarea {
       width: 100%;
       padding: 8px;
       margin-top: 5px;
+      background: #1e293b;
+      color: #f1f5f9;
+      border: 1px solid #475569;
+    }
+    input[type="date"] {
       background: #1e293b;
       color: #f1f5f9;
       border: 1px solid #475569;
@@ -56,7 +58,6 @@
       border-radius: 5px;
       cursor: pointer;
     }
-    button.task:hover { background: #0284c7; }
     .done { text-decoration: line-through; color: #94a3b8; }
     .notification {
       background: #facc15;
@@ -65,24 +66,77 @@
       margin-bottom: 10px;
       border-left: 5px solid #eab308;
     }
-    canvas { max-width: 500px; margin: auto; }
-    #calendar { background: white; color: black; padding: 10px; border-radius: 10px; }
+    #calendar {
+      background: white;
+      color: black;
+      padding: 10px;
+      border-radius: 10px;
+    }
   </style>
 </head>
 <body>
 <nav>
-<button class="active" id="tab-dashboard" onclick="showTab('dashboard')">📊 Statistik</button>
-<button id="tab-tugas" onclick="showTab('tugas')">📝 Daftar Tugas</button>
-<button id="tab-arsip" onclick="showTab('arsip')">🗂️ Arsip</button>
-<button id="tab-kalender" onclick="showTab('kalender')">📅 Kalender</button>
+  <button onclick="showTab('dashboard')" id="tab-dashboard" class="active">📊 Statistik</button>
+  <button onclick="showTab('tugas')" id="tab-tugas">📝 Daftar Tugas</button>
+  <button onclick="showTab('arsip')" id="tab-arsip">🗂️ Arsip</button>
+  <button onclick="showTab('kalender')" id="tab-kalender">📅 Kalender</button>
 </nav>
-<section class="active" id="dashboard"><h1>Monitoring Tugas</h1><div class="stats"><canvas id="taskChart"></canvas></div><div class="notifications" id="deadline-alerts"></div><div class="task-form"><label>Nama<input id="task-name"/></label><label>Deskripsi<textarea id="task-desc"></textarea></label><label>Mulai<input id="start-date" type="date"/></label><label>Deadline<input id="end-date" type="date"/></label><label>Prioritas<select id="priority"><option>Tinggi</option><option>Sedang</option><option>Rendah</option></select></label><label>Status<select id="status"><option>Belum</option><option>Sedang</option><option>Selesai</option></select></label><label>Catatan<textarea id="notes"></textarea></label><button class="task" onclick="addTask()">Tambah</button></div><div class="filters"><label>Filter<input id="filter-date" onchange="filterByDate()" type="date"/></label><button class="task" onclick="resetFilter()">Reset</button></div><button class="task" onclick="exportToExcel()">📁 Export ke Excel</button></section>
-<section id="tugas"></section>
-<section id="arsip"><div class="task-list" id="arsip-list"></div></section>
-<section id="kalender"><div id="calendar"></div></section>
+
+<section id="dashboard" class="active">
+  <h1>Monitoring Tugas</h1>
+  <div class="stats"><canvas id="taskChart"></canvas></div>
+  <div class="notifications" id="deadline-alerts"></div>
+</section>
+
+<section id="tugas">
+  <div class="filters">
+    <label>Filter berdasarkan tanggal
+      <input type="date" id="filter-date">
+    </label>
+    <button class="task" onclick="resetFilter()">Reset</button>
+  </div>
+  <div class="task-form">
+    <label>Nama Tugas<input id="task-name"></label>
+    <label>Deskripsi<textarea id="task-desc"></textarea></label>
+    <label>Mulai<input type="date" id="start-date"></label>
+    <label>Deadline<input type="date" id="end-date"></label>
+    <label>Prioritas
+      <select id="priority">
+        <option>Tinggi</option>
+        <option>Sedang</option>
+        <option>Rendah</option>
+      </select>
+    </label>
+    <label>Status
+      <select id="status">
+        <option>Belum</option>
+        <option>Sedang</option>
+        <option>Selesai</option>
+      </select>
+    </label>
+    <label>Catatan<textarea id="notes"></textarea></label>
+    <button class="task" onclick="addTask()">Tambah Tugas</button>
+    <button class="task" onclick="exportToExcel()">📁 Export ke Excel</button>
+  </div>
+  <div class="task-list" id="task-list"></div>
+</section>
+<section id="arsip">
+  <div class="task-list" id="arsip-list"></div>
+</section>
+
+<section id="kalender">
+  <div id="calendar"></div>
+</section>
+
 <script>
 let tasks = JSON.parse(localStorage.getItem("tasks")) || [];
-function saveTasks() { localStorage.setItem("tasks", JSON.stringify(tasks)); renderTasks(); if (window.fullCalendarInstance) window.fullCalendarInstance.refetchEvents(); }
+
+function saveTasks() {
+  localStorage.setItem("tasks", JSON.stringify(tasks));
+  renderTasks();
+  if (window.fullCalendarInstance) window.fullCalendarInstance.refetchEvents();
+}
+
 function addTask() {
   tasks.push({
     name: document.getElementById("task-name").value,
@@ -99,8 +153,11 @@ function addTask() {
 function renderTasks() {
   const now = new Date();
   let selesai = 0, belum = 0;
-  const list = document.getElementById("task-list"), arsip = document.getElementById("arsip-list"), alerts = document.getElementById("deadline-alerts");
+  const list = document.getElementById("task-list"),
+        arsip = document.getElementById("arsip-list"),
+        alerts = document.getElementById("deadline-alerts");
   list.innerHTML = ""; arsip.innerHTML = ""; alerts.innerHTML = "";
+
   tasks.forEach((t) => {
     const e = document.createElement("div");
     e.className = "task-item" + (t.status === "Selesai" ? " done" : "");
@@ -108,7 +165,9 @@ function renderTasks() {
     const ed = new Date(t.end);
     const isArsip = t.status === "Selesai" && (now - ed) / 86400000 > 7;
     (isArsip ? arsip : list).appendChild(e);
+
     if (t.status === "Selesai") selesai++; else belum++;
+
     if (t.status !== "Selesai" && ed - now < 3 * 86400000 && ed - now > 0) {
       const alert = document.createElement("div");
       alert.className = "notification";
@@ -116,18 +175,27 @@ function renderTasks() {
       alerts.appendChild(alert);
     }
   });
+
   if (window.taskChart) window.taskChart.destroy();
   window.taskChart = new Chart(document.getElementById("taskChart"), {
     type: 'doughnut',
-    data: { labels: ['Selesai', 'Belum'], datasets: [{ data: [selesai, belum], backgroundColor: ['#10b981', '#f43f5e'] }] }
+    data: {
+      labels: ['Selesai', 'Belum'],
+      datasets: [{
+        data: [selesai, belum],
+        backgroundColor: ['#10b981', '#f43f5e']
+      }]
+    }
   });
 }
+
 function showTab(tab) {
   document.querySelectorAll("section").forEach(s => s.classList.remove("active"));
   document.querySelectorAll("nav button").forEach(b => b.classList.remove("active"));
   document.getElementById(tab).classList.add("active");
   document.getElementById("tab-" + tab).classList.add("active");
 }
+
 function filterByDate() {
   const f = document.getElementById("filter-date").value;
   const list = document.getElementById("task-list");
@@ -141,7 +209,19 @@ function filterByDate() {
     }
   });
 }
-function resetFilter() { document.getElementById("filter-date").value = ""; renderTasks(); }
+
+function resetFilter() {
+  document.getElementById("filter-date").value = "";
+  renderTasks();
+}
+
+function exportToExcel() {
+  const ws = XLSX.utils.json_to_sheet(tasks);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Tugas");
+  XLSX.writeFile(wb, "Monitoring-Tugas.xlsx");
+}
+
 document.addEventListener('DOMContentLoaded', function () {
   const calEl = document.getElementById('calendar');
   const calendar = new FullCalendar.Calendar(calEl, {
@@ -159,4 +239,5 @@ document.addEventListener('DOMContentLoaded', function () {
   renderTasks();
 });
 </script>
-</body></html>
+</body>
+</html>
