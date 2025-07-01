@@ -17,7 +17,7 @@
       <button onclick="showTab('arsip')" id="tab-arsip" class="px-4 py-2 bg-gray-300 rounded">Arsip</button>
     </nav>
 
-    <section id="daftar" class="active">
+    <section id="daftar">
       <form onsubmit="addTask(); return false" class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
         <input class="border p-2 rounded" type="text" id="name" placeholder="Nama Tugas" required />
         <input class="border p-2 rounded" type="text" id="desc" placeholder="Deskripsi" required />
@@ -213,6 +213,7 @@ function editTask(index) {
   editingIndex = index;
 }
 document.addEventListener("DOMContentLoaded", () => {
+  showTab('daftar');
   renderTasks();
   renderStats();
   renderCalendar();
