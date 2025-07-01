@@ -2,154 +2,104 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Monitoring Tugas</title>
-  <script>
-    const AUTH_PASSWORD = "boy123";
-    if (!sessionStorage.getItem("authenticated")) {
-      const pass = prompt("Masukkan password untuk mengakses Monitoring Tugas:");
-      if (pass !== AUTH_PASSWORD) {
-        alert("Password salah. Akses ditolak.");
-        window.location.href = "https://google.com";
-      } else {
-        sessionStorage.setItem("authenticated", true);
-      }
-    }
-  </script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
   <style>
-    body { font-family: Arial, sans-serif; margin: 0; background: #1e293b; color: #f1f5f9; }
-    nav { background: #0f172a; padding: 10px; display: flex; justify-content: space-around; flex-wrap: wrap; }
-    nav button { background: #334155; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer; color: #f1f5f9; }
-    nav button.active { background: #0ea5e9; color: white; }
-    section { display: none; padding: 20px; }
+    body { background: #1e293b; color: #fff; font-family: sans-serif; }
+    nav { display: flex; justify-content: space-around; padding: 10px; background: #0f172a; }
+    nav button.active { background-color: #2563eb; color: white; }
+    section { display: none; padding: 1rem; }
     section.active { display: block; }
-    .task-list, .stats, .notifications, .task-form, .filters {
-      margin-bottom: 20px;
-      background: #334155;
-      padding: 15px;
-      border-radius: 8px;
-    }
-    .task-item { border-bottom: 1px solid #475569; padding: 10px 0; }
-    .task-item:last-child { border-bottom: none; }
-    label { display: block; margin-top: 10px; }
-    input, select, textarea {
-      width: 100%;
-      padding: 8px;
-      margin-top: 5px;
-      background: #1e293b;
-      color: #f1f5f9;
-      border: 1px solid #475569;
-    }
-    input[type="date"] {
-      background: #1e293b;
-      color: #f1f5f9;
-      border: 1px solid #475569;
-    }
-    button.task {
-      margin-top: 10px;
-      padding: 10px 15px;
-      background: #0ea5e9;
-      color: white;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-    }
-    .done { text-decoration: line-through; color: #94a3b8; }
-    .notification {
-      background: #facc15;
-      color: #1e293b;
-      padding: 10px;
-      margin-bottom: 10px;
-      border-left: 5px solid #eab308;
-    }
-    #calendar {
-      background: white;
-      color: black;
-      padding: 10px;
-      border-radius: 10px;
-    }
+    .task-item { background: #334155; padding: 10px; margin-bottom: 10px; border-radius: 5px; }
+    .task-item.done { opacity: 0.6; text-decoration: line-through; }
+    .notification { background: #facc15; color: #1e293b; padding: 8px; margin: 5px 0; border-radius: 5px; }
+    .stats { max-width: 400px; margin: 20px auto; }
   </style>
 </head>
 <body>
-<nav>
-  <button onclick="showTab('dashboard')" id="tab-dashboard" class="active">📊 Statistik</button>
-  <button onclick="showTab('tugas')" id="tab-tugas">📝 Daftar Tugas</button>
-  <button onclick="showTab('arsip')" id="tab-arsip">🗂️ Arsip</button>
-  <button onclick="showTab('kalender')" id="tab-kalender">📅 Kalender</button>
-</nav>
-<section id="dashboard" class="active">
-  <h1>Monitoring Tugas</h1>
-  <div class="stats"><canvas id="taskChart"></canvas></div>
-  <div class="notifications" id="deadline-alerts"></div>
+  <nav>
+    <button id="tab-statistik" onclick="showTab('statistik')">📊 Statistik</button>
+    <button id="tab-daftar" onclick="showTab('daftar')">🗒️ Daftar Tugas</button>
+    <button id="tab-arsip" onclick="showTab('arsip')">📁 Arsip</button>
+    <button id="tab-kalender" onclick="showTab('kalender')">🗓️ Kalender</button>
+  </nav>
 
-  <div class="task-form">
-    <label>Nama Tugas<input id="task-name"></label>
-    <label>Deskripsi<textarea id="task-desc"></textarea></label>
-    <label>Mulai<input type="date" id="start-date"></label>
-    <label>Deadline<input type="date" id="end-date"></label>
-    <label>Prioritas
-      <select id="priority">
-        <option>Tinggi</option>
-        <option>Sedang</option>
-        <option>Rendah</option>
+  <section id="statistik" class="active">
+    <h2 class="text-xl font-bold mb-2">Monitoring Tugas</h2>
+    <div id="deadline-alerts"></div>
+    <div class="stats"><canvas id="taskChart"></canvas></div>
+
+    <form onsubmit="addTask(); return false;" class="space-y-2">
+      <input required placeholder="Nama Tugas" id="name" class="w-full p-2 rounded bg-gray-700" />
+      <textarea placeholder="Deskripsi" id="desc" class="w-full p-2 rounded bg-gray-700"></textarea>
+      <input type="date" id="start" class="w-full p-2 rounded bg-gray-700" />
+      <input type="date" id="end" class="w-full p-2 rounded bg-gray-700" />
+      <select id="priority" class="w-full p-2 rounded bg-gray-700">
+        <option>Tinggi</option><option>Menengah</option><option>Rendah</option>
       </select>
-    </label>
-    <label>Status
-      <select id="status">
-        <option>Belum</option>
-        <option>Sedang</option>
-        <option>Selesai</option>
+      <select id="status" class="w-full p-2 rounded bg-gray-700">
+        <option>Belum</option><option>Selesai</option>
       </select>
-    </label>
-    <label>Catatan<textarea id="notes"></textarea></label>
-    <button class="task" onclick="addTask()">Tambah Tugas</button>
-    <button class="task" onclick="exportToExcel()">📁 Export ke Excel</button>
-  </div>
-</section>
+      <textarea placeholder="Catatan" id="notes" class="w-full p-2 rounded bg-gray-700"></textarea>
+      <div class="flex space-x-2">
+        <button class="bg-blue-500 text-white p-2 rounded">Tambah Tugas</button>
+        <button type="button" onclick="exportToExcel()" class="bg-yellow-500 text-black p-2 rounded">📂 Export ke Excel</button>
+      </div>
+    </form>
+  </section>
 
-<section id="tugas">
-  <div class="filters">
-    <label>Filter berdasarkan tanggal
-      <input type="date" id="filter-date">
-    </label>
-    <button class="task" onclick="resetFilter()">Reset</button>
-  </div>
-  <div class="task-list" id="task-list"></div>
-</section>
-<section id="arsip">
-  <div class="task-list" id="arsip-list"></div>
-</section>
+  <section id="daftar">
+    <div class="flex items-center space-x-2">
+      <input type="date" id="filter-date" class="p-2 rounded bg-gray-700" />
+      <button onclick="filterByDate()" class="bg-blue-500 text-white px-4 py-2 rounded">Filter</button>
+      <button onclick="resetFilter()" class="bg-red-500 text-white px-4 py-2 rounded">Reset</button>
+    </div>
+    <div id="task-list" class="mt-4"></div>
+  </section>
 
-<section id="kalender">
-  <div id="calendar"></div>
-</section>
+  <section id="arsip">
+    <h2 class="text-xl font-bold mb-2">Tugas Diarsipkan</h2>
+    <div id="arsip-list"></div>
+  </section>
+
+  <section id="kalender">
+    <div id="calendar"></div>
+  </section>
 
 <script>
-let tasks = JSON.parse(localStorage.getItem("tasks")) || [];
+let tasks = JSON.parse(localStorage.getItem("tasks") || "[]");
 
 function saveTasks() {
   localStorage.setItem("tasks", JSON.stringify(tasks));
   renderTasks();
-  if (window.fullCalendarInstance) window.fullCalendarInstance.refetchEvents();
 }
 
 function addTask() {
-  tasks.push({
-    name: document.getElementById("task-name").value,
-    desc: document.getElementById("task-desc").value,
-    start: document.getElementById("start-date").value,
-    end: document.getElementById("end-date").value,
+  const t = {
+    name: document.getElementById("name").value,
+    desc: document.getElementById("desc").value,
+    start: document.getElementById("start").value,
+    end: document.getElementById("end").value,
     priority: document.getElementById("priority").value,
     status: document.getElementById("status").value,
     notes: document.getElementById("notes").value,
-    created: new Date().toISOString()
-  });
+  };
+  tasks.push(t);
   saveTasks();
+  document.querySelector("form").reset();
 }
+
+function deleteTask(index) {
+  if (confirm("Yakin ingin menghapus tugas ini?")) {
+    tasks.splice(index, 1);
+    saveTasks();
+  }
+}
+
 function renderTasks() {
   const now = new Date();
   let selesai = 0, belum = 0;
@@ -158,25 +108,19 @@ function renderTasks() {
         alerts = document.getElementById("deadline-alerts");
   list.innerHTML = ""; arsip.innerHTML = ""; alerts.innerHTML = "";
 
-  tasks.forEach((t) => {
+  tasks.forEach((t, index) => {
     const e = document.createElement("div");
     e.className = "task-item" + (t.status === "Selesai" ? " done" : "");
-e.innerHTML = `
-  <div style="display:flex; justify-content:space-between;">
-    <div>
-      <strong>${t.name}</strong> (${t.priority})<br>
-      ${t.desc}<br>
-      ⏳ ${t.start} s/d ${t.end}<br>
-      ${t.notes}
-    </div>
-    <button onclick="deleteTask(${tasks.indexOf(t)})" style="background:#ef4444;color:white;border:none;border-radius:5px;height:30px;cursor:pointer;">❌</button>
-  </div>`;
-function deleteTask(index) {
-  if (confirm("Yakin ingin menghapus tugas ini?")) {
-    tasks.splice(index, 1);
-    saveTasks();
-  }
-}
+    e.innerHTML = `
+      <div style="display:flex; justify-content:space-between;">
+        <div>
+          <strong>${t.name}</strong> (${t.priority})<br>
+          ${t.desc}<br>
+          ⏳ ${t.start} s/d ${t.end}<br>
+          ${t.notes}
+        </div>
+        <button onclick="deleteTask(${index})" style="background:#ef4444;color:white;border:none;border-radius:5px;height:30px;cursor:pointer;">❌</button>
+      </div>`;
     const ed = new Date(t.end);
     const isArsip = t.status === "Selesai" && (now - ed) / 86400000 > 7;
     (isArsip ? arsip : list).appendChild(e);
@@ -196,10 +140,7 @@ function deleteTask(index) {
     type: 'doughnut',
     data: {
       labels: ['Selesai', 'Belum'],
-      datasets: [{
-        data: [selesai, belum],
-        backgroundColor: ['#10b981', '#f43f5e']
-      }]
+      datasets: [{ data: [selesai || 0.1, belum || 0.1], backgroundColor: ['#10b981', '#f43f5e'] }]
     }
   });
 }
@@ -215,11 +156,20 @@ function filterByDate() {
   const f = document.getElementById("filter-date").value;
   const list = document.getElementById("task-list");
   list.innerHTML = "";
-  tasks.forEach(t => {
+  tasks.forEach((t, index) => {
     if (t.start <= f && t.end >= f) {
       const e = document.createElement("div");
       e.className = "task-item" + (t.status === "Selesai" ? " done" : "");
-      e.innerHTML = `<strong>${t.name}</strong> (${t.priority})<br>${t.desc}<br>⏳ ${t.start} s/d ${t.end}<br>${t.notes}`;
+      e.innerHTML = `
+        <div style="display:flex; justify-content:space-between;">
+          <div>
+            <strong>${t.name}</strong> (${t.priority})<br>
+            ${t.desc}<br>
+            ⏳ ${t.start} s/d ${t.end}<br>
+            ${t.notes}
+          </div>
+          <button onclick="deleteTask(${index})" style="background:#ef4444;color:white;border:none;border-radius:5px;height:30px;cursor:pointer;">❌</button>
+        </div>`;
       list.appendChild(e);
     }
   });
