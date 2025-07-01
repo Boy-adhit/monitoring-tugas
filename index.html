@@ -94,6 +94,87 @@ document.addEventListener('DOMContentLoaded', function () {
   });
   calendar.render();
 });
+function saveTasks(tasks) {
+  localStorage.setItem("tasks", JSON.stringify(tasks));
+  renderTasks();
+  renderStats();
+  renderCalendar();
+}
+
+function getTasks() {
+  return JSON.parse(localStorage.getItem("tasks") || "[]");
+}
+
+function addTask() {
+  const tasks = getTasks();
+  const newTask = {
+    name: document.getElementById("name").value,
+    desc: document.getElementById("desc").value,
+    start: document.getElementById("start").value,
+    end: document.getElementById("end").value,
+    priority: document.getElementById("priority").value,
+    kategori: document.getElementById("kategori").value,
+    status: document.getElementById("status").value,
+    notes: document.getElementById("notes").value,
+    done: false
+  };
+  tasks.push(newTask);
+  saveTasks(tasks);
+  document.querySelector("form").reset();
+}
+
+function renderTasks() {
+  const taskList = document.getElementById("task-list");
+  const tasks = getTasks().filter(t => t.status !== "Selesai" && t.status !== "Arsip");
+  taskList.innerHTML = tasks.map((t, i) => `
+    <div class="bg-white p-4 rounded shadow">
+      <div class="font-bold">${t.name}</div>
+      <div class="text-sm text-gray-600">${t.desc}</div>
+      <div class="text-sm text-gray-500">Mulai: ${t.start} | Deadline: ${t.end}</div>
+      <div class="text-sm text-gray-500">Prioritas: ${t.priority} | Kategori: ${t.kategori}</div>
+      <div class="text-sm text-gray-500">Catatan: ${t.notes}</div>
+    </div>`).join("");
+}
+
+function renderStats() {
+  const tasks = getTasks();
+  const selesai = tasks.filter(t => t.status === "Selesai").length;
+  const belum = tasks.filter(t => t.status === "Belum").length;
+  const ctx = document.getElementById("taskChart").getContext("2d");
+  if (window.taskChart) window.taskChart.destroy();
+  window.taskChart = new Chart(ctx, {
+    type: "doughnut",
+    data: {
+      labels: ["Selesai", "Belum"],
+      datasets: [{ data: [selesai, belum], backgroundColor: ["#10b981", "#ef4444"] }]
+    }
+  });
+}
+
+function renderCalendar() {
+  const calendarEl = document.getElementById('calendar');
+  calendarEl.innerHTML = '';
+  const calendar = new FullCalendar.Calendar(calendarEl, {
+    initialView: 'dayGridMonth',
+    headerToolbar: {
+      left: 'prev,next today',
+      center: 'title',
+      right: 'dayGridMonth,timeGridWeek,listWeek'
+    },
+    events: getTasks().filter(t => t.status !== 'Arsip').map(task => ({
+      title: task.name,
+      start: task.start,
+      end: task.end || task.start
+    }))
+  });
+  calendar.render();
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  renderTasks();
+  renderStats();
+  renderCalendar();
+});
 </script>
 </body>
 </html>
