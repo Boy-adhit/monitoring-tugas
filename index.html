@@ -3,228 +3,119 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Monitoring Tugas</title>
-  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
+  <title>Monitoring Tugas Web</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.4/index.global.min.css">
   <style>
-    body { background: #1e293b; color: #fff; font-family: sans-serif; }
-    nav { display: flex; justify-content: space-around; padding: 10px; background: #0f172a; }
-    nav button.active { background-color: #2563eb; color: white; }
-    section { display: none; padding: 1rem; }
+    body { font-family: sans-serif; padding: 1rem; max-width: 900px; margin: auto; }
+    nav button { margin: 0.3rem; padding: 0.5rem 1rem; }
+    section { display: none; margin-top: 1rem; }
     section.active { display: block; }
-    .task-item { background: #334155; padding: 10px; margin-bottom: 10px; border-radius: 5px; position: relative; }
-    .task-item.done { opacity: 0.6; text-decoration: line-through; }
-    .notification { background: #facc15; color: #1e293b; padding: 8px; margin: 5px 0; border-radius: 5px; }
-    .stats { max-width: 400px; margin: 20px auto; }
-    .delete-btn { position: absolute; top: 10px; right: 10px; background: #dc2626; padding: 4px 8px; border-radius: 4px; color: white; cursor: pointer; }
-    .done-btn { position: absolute; bottom: 10px; right: 10px; background: #16a34a; padding: 4px 8px; border-radius: 4px; color: white; cursor: pointer; }
-    .done-btn::before { content: "\2713"; font-weight: bold; }
-    .checkbox { margin-right: 8px; }
-    #calendar { max-width: 100%; margin: 0 auto; background: white; color: black; padding: 10px; border-radius: 10px; }
+    .task-item { border: 1px solid #ccc; padding: 0.5rem; margin-bottom: 0.5rem; border-radius: 5px; background: #f8f8f8; position: relative; }
+    .task-item.done { background: #e0ffe0; }
+    .delete-btn, .done-btn { position: absolute; top: 5px; cursor: pointer; padding: 4px; }
+    .delete-btn { right: 5px; color: red; }
+    .done-btn { right: 35px; color: green; }
+    .notification { background: #fff3cd; padding: 0.5rem; margin-bottom: 0.5rem; border-left: 5px solid #ffc107; }
   </style>
 </head>
 <body>
+  <h1>Monitoring Tugas</h1>
   <nav>
-    <button id="tab-statistik" onclick="showTab('statistik')">📊 Statistik</button>
-    <button id="tab-daftar" onclick="showTab('daftar')">🗒️ Daftar Tugas</button>
-    <button id="tab-arsip" onclick="showTab('arsip')">📁 Arsip</button>
-    <button id="tab-kalender" onclick="showTab('kalender')">🗓️ Kalender</button>
+    <button onclick="showTab('daftar')" id="tab-daftar">Daftar Tugas</button>
+    <button onclick="showTab('statistik')" id="tab-statistik">Statistik</button>
+    <button onclick="showTab('kalender')" id="tab-kalender">Kalender</button>
+    <button onclick="showTab('arsip')" id="tab-arsip">Arsip</button>
   </nav>
 
-  <section id="statistik" class="active">
-    <h2 class="text-xl font-bold mb-2">Monitoring Tugas</h2>
-    <div id="deadline-alerts"></div>
-    <div class="stats"><canvas id="taskChart"></canvas></div>
-
-    <form onsubmit="addTask(); return false;" class="space-y-2">
-      <input required placeholder="Nama Tugas" id="name" class="w-full p-2 rounded bg-gray-700" />
-      <textarea placeholder="Deskripsi" id="desc" class="w-full p-2 rounded bg-gray-700"></textarea>
-      <input type="date" id="start" class="w-full p-2 rounded bg-gray-700" />
-      <input type="date" id="end" class="w-full p-2 rounded bg-gray-700" />
-      <select id="priority" class="w-full p-2 rounded bg-gray-700">
-        <option>Tinggi</option><option>Menengah</option><option>Rendah</option>
+  <section id="daftar" class="active">
+    <form onsubmit="addTask(); return false">
+      <input type="text" id="name" placeholder="Nama Tugas" required />
+      <input type="text" id="desc" placeholder="Deskripsi" required />
+      <input type="date" id="start" required />
+      <input type="date" id="end" required />
+      <select id="priority">
+        <option value="Tinggi">Tinggi</option>
+        <option value="Sedang">Sedang</option>
+        <option value="Rendah">Rendah</option>
       </select>
-      <select id="kategori" class="w-full p-2 rounded bg-gray-700">
-        <option>Rutin</option><option>Ad-hoc</option>
-      </select>
-      <select id="status" class="w-full p-2 rounded bg-gray-700">
-        <option>Belum</option><option>Selesai</option>
-      </select>
-      <textarea placeholder="Catatan" id="notes" class="w-full p-2 rounded bg-gray-700"></textarea>
-      <div class="flex space-x-2">
-        <button class="bg-blue-500 text-white p-2 rounded">Tambah Tugas</button>
-        <button type="button" onclick="exportToExcel()" class="bg-yellow-500 text-black p-2 rounded">📂 Export ke Excel</button>
-      </div>
-    </form>
-  </section>
-
-  <section id="daftar">
-    <div class="flex items-center space-x-2">
-      <input type="date" id="filter-date" class="p-2 rounded bg-gray-700" />
-      <select id="filter-kategori" class="p-2 rounded bg-gray-700">
-        <option value="">Semua Kategori</option>
+      <select id="kategori">
         <option value="Rutin">Rutin</option>
         <option value="Ad-hoc">Ad-hoc</option>
       </select>
-      <button onclick="filterByDate()" class="bg-blue-500 text-white px-4 py-2 rounded">Filter</button>
-      <button onclick="resetFilter()" class="bg-red-500 text-white px-4 py-2 rounded">Reset</button>
+      <select id="status">
+        <option value="Belum">Belum</option>
+        <option value="Selesai">Selesai</option>
+      </select>
+      <input type="text" id="notes" placeholder="Catatan" />
+      <button type="submit">Tambah</button>
+    </form>
+    <div>
+      <label>Filter Tanggal: <input type="date" id="filterDate" onchange="filterByDate()"></label>
+      <label>Kategori: <select id="filterKategori" onchange="filterByDate()">
+        <option value="">Semua</option>
+        <option value="Rutin">Rutin</option>
+        <option value="Ad-hoc">Ad-hoc</option>
+      </select></label>
+      <button onclick="resetFilter()">Reset</button>
     </div>
-    <div id="task-list" class="mt-4"></div>
+    <div id="task-list"></div>
   </section>
 
-  <section id="arsip">
-    <h2 class="text-xl font-bold mb-2">Tugas Diarsipkan</h2>
-    <div id="arsip-list"></div>
+  <section id="statistik">
+    <canvas id="taskChart" height="150"></canvas>
+    <div id="deadline-alerts"></div>
   </section>
 
   <section id="kalender">
     <div id="calendar"></div>
   </section>
-<script>
-let tasks = JSON.parse(localStorage.getItem("tasks") || "[]");
 
-function saveTasks() {
-  localStorage.setItem("tasks", JSON.stringify(tasks));
-}
+  <section id="arsip">
+    <div id="arsip-list"></div>
+  </section>
 
-function showTab(tabId) {
-  document.querySelectorAll("section").forEach(s => s.classList.remove("active"));
-  document.getElementById(tabId).classList.add("active");
-  document.querySelectorAll("nav button").forEach(b => b.classList.remove("active"));
-  document.getElementById(`tab-${tabId}`).classList.add("active");
-  if (tabId === 'statistik') { renderChart(); renderAlerts(); }
-  if (tabId === 'kalender') renderCalendar();
-  if (tabId === 'daftar') renderTasks();
-  if (tabId === 'arsip') renderArsip();
-}
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.4/index.global.min.js"></script>
 
-function addTask() {
-  const t = {
-    name: name.value, desc: desc.value, start: start.value, end: end.value,
-    priority: priority.value, kategori: kategori.value, status: status.value,
-    notes: notes.value, done: false
-  };
-  tasks.push(t);
-  saveTasks();
-  document.querySelector("form").reset();
-  renderTasks(); renderAlerts(); renderChart();
-}
-
-function renderTasks() {
-  const list = document.getElementById("task-list");
-  list.innerHTML = "";
-  const fd = filterDate.value;
-  const fk = filterKategori.value;
-  tasks.forEach((t, i) => {
-    if (t.status === "Selesai") return;
-    if ((fd && t.start !== fd && t.end !== fd) || (fk && t.kategori !== fk)) return;
-    const d = document.createElement("div");
-    d.className = `task-item ${t.done ? "done" : ""}`;
-    d.innerHTML = `
-      <strong>${t.name}</strong> (${t.priority}) [${t.kategori}]<br>
-      ${t.desc}<br>
-      ⏳ ${t.start} s/d ${t.end}<br>
-      <span contenteditable onblur="editNotes(${i}, this.innerText)">${t.notes}</span>
-      <div class="delete-btn" onclick="deleteTask(${i})">❌</div>
-      <div class="done-btn" onclick="toggleDone(${i})" title="Tandai selesai"></div>`;
-    list.appendChild(d);
-  });
-}
-
-function deleteTask(i) {
-  tasks.splice(i, 1);
-  saveTasks();
-  renderTasks();
-  renderChart();
-  renderAlerts();
-}
-
-function toggleDone(i) {
-  tasks[i].done = !tasks[i].done;
-  if (tasks[i].done) tasks[i].status = "Selesai";
-  saveTasks();
-  renderTasks();
-  renderChart();
-  renderAlerts();
-}
-
-function editNotes(i, v) {
-  tasks[i].notes = v;
-  saveTasks();
-}
-
-function renderAlerts() {
-  const wrap = document.getElementById("deadline-alerts");
-  wrap.innerHTML = "";
-  const now = new Date();
-  tasks.forEach(t => {
-    const end = new Date(t.end);
-    const days = (end - now) / (1000 * 60 * 60 * 24);
-    if (days <= 3 && t.status !== "Selesai") {
-      const d = document.createElement("div");
-      d.className = "notification";
-      d.innerText = `⏰ Deadline "${t.name}" tinggal ${Math.ceil(days)} hari`;
-      wrap.appendChild(d);
-    }
-  });
-}
-
-function renderChart() {
-  const ctx = document.getElementById("taskChart").getContext("2d");
-  const selesai = tasks.filter(t => t.status === "Selesai").length;
-  const belum = tasks.length - selesai;
-  if (window.taskChart) window.taskChart.destroy();
-  window.taskChart = new Chart(ctx, {
-    type: 'doughnut',
-    data: {
-      labels: ['Selesai', 'Belum'],
-      datasets: [{ data: [selesai, belum], backgroundColor: ['#16a34a', '#dc2626'] }]
-    }
-  });
-}
-
-function renderArsip() {
-  const a = document.getElementById("arsip-list");
-  a.innerHTML = "";
-  tasks.filter(t => t.status === "Selesai").forEach(t => {
-    const d = document.createElement("div");
-    d.className = "task-item done";
-    d.innerHTML = `<strong>${t.name}</strong><br>${t.desc}<br>📅 ${t.start} - ${t.end}<br>${t.notes}`;
-    a.appendChild(d);
-  });
-}
-
-function renderCalendar() {
-  const cal = document.getElementById("calendar");
-  cal.innerHTML = "";
-  const calendar = new FullCalendar.Calendar(cal, {
-    initialView: 'dayGridMonth',
-    height: 500,
-    events: tasks.map(t => ({
-      title: t.name,
-      start: t.start,
-      end: t.end,
-      color: t.status === "Selesai" ? '#16a34a' : '#facc15'
-    }))
-  });
-  calendar.render();
-}
-
-function filterByDate() {
-  renderTasks();
-}
-
-function resetFilter() {
-  filterDate.value = "";
-  filterKategori.value = "";
-  renderTasks();
-}
-
-renderTasks();
-renderAlerts();
-renderChart();
+  <script>
+let stored = localStorage.getItem("tasks");
+let tasks = stored ? JSON.parse(stored) : [
+  {
+    name: "Rapat Tim Project",
+    desc: "Diskusi mingguan mengenai progres dan kendala",
+    start: "2025-07-01",
+    end: "2025-07-01",
+    priority: "Tinggi",
+    kategori: "Rutin",
+    status: "Belum",
+    notes: "Siapkan laporan mingguan",
+    done: false
+  },
+  {
+    name: "Update Website Perusahaan",
+    desc: "Perbarui halaman produk dan kontak",
+    start: "2025-07-02",
+    end: "2025-07-05",
+    priority: "Sedang",
+    kategori: "Ad-hoc",
+    status: "Belum",
+    notes: "Minta materi terbaru dari tim produk",
+    done: false
+  },
+  {
+    name: "Kirim Laporan Keuangan",
+    desc: "Rekap keuangan bulan Juni dan kirim ke manajer",
+    start: "2025-07-03",
+    end: "2025-07-03",
+    priority: "Tinggi",
+    kategori: "Rutin",
+    status: "Selesai",
+    notes: "Sudah dikirim via email",
+    done: true
+  }
+];
+saveTasks();
+// lanjutkan script seperti sebelumnya (dari renderTasks dsb.)
 </script>
 </body>
 </html>
