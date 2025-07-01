@@ -60,6 +60,11 @@
   <section id="daftar">
     <div class="flex items-center space-x-2">
       <input type="date" id="filter-date" class="p-2 rounded bg-gray-700" />
+      <select id="filter-kategori" class="p-2 rounded bg-gray-700">
+        <option value="">Semua Kategori</option>
+        <option value="Rutin">Rutin</option>
+        <option value="Ad-hoc">Ad-hoc</option>
+      </select>
       <button onclick="filterByDate()" class="bg-blue-500 text-white px-4 py-2 rounded">Filter</button>
       <button onclick="resetFilter()" class="bg-red-500 text-white px-4 py-2 rounded">Reset</button>
     </div>
@@ -104,20 +109,26 @@ function renderTasks() {
   const list = document.getElementById("task-list");
   const arsip = document.getElementById("arsip-list");
   list.innerHTML = arsip.innerHTML = "";
-  tasks.forEach((t, i) => {
-    const el = document.createElement("div");
-    el.className = `task-item ${t.status === 'Selesai' ? 'done' : ''}`;
-    el.innerHTML = `
-      <div><strong>${t.name}</strong> (${t.priority}) [${t.kategori}]</div>
-      <div>${t.desc}</div>
-      <div>⏳ ${t.start} s/d ${t.end}</div>
-      <div contenteditable onblur="updateNotes(${i}, this.innerText)">${t.notes}</div>
-      <input type="checkbox" class="checkbox" onchange="toggleDone(${i})" ${t.status === 'Selesai' ? 'checked' : ''}/> Tandai selesai
-      <span class="delete-btn" onclick="deleteTask(${i})">❌</span>
-    `;
-    if (t.status === "Selesai") arsip.appendChild(el);
-    else list.appendChild(el);
-  });
+  tasks
+    .map((t, i) => ({ ...t, index: i }))
+    .sort((a, b) => new Date(a.end) - new Date(b.end))
+    .forEach((t) => {
+      const i = t.index;
+      const el = document.createElement("div");
+      el.className = `task-item ${t.status === 'Selesai' ? 'done' : ''}`;
+      el.innerHTML = `
+        <div><strong>${t.name}</strong> (${t.priority}) [${t.kategori}]</div>
+        <div>${t.desc}</div>
+        <div>⏳ ${t.start} s/d ${t.end}</div>
+        <div contenteditable onblur="updateNotes(${i}, this.innerText)">${t.notes}</div>
+        <span class="delete-btn" onclick="deleteTask(${i})">❌</span>
+        <div class="mt-2">
+          <label><input type="checkbox" class="checkbox" onchange="toggleDone(${i})" ${t.status === 'Selesai' ? 'checked' : ''}/> Tandai selesai</label>
+        </div>
+      `;
+      if (t.status === "Selesai") arsip.appendChild(el);
+      else list.appendChild(el);
+    });
   renderDeadlineAlerts();
 }
 
@@ -166,6 +177,38 @@ function exportToExcel() {
   const ws = XLSX.utils.json_to_sheet(tasks);
   XLSX.utils.book_append_sheet(wb, ws, "Tugas");
   XLSX.writeFile(wb, "tugas.xlsx");
+}
+
+function filterByDate() {
+  const filterDate = document.getElementById("filter-date").value;
+  const kategori = document.getElementById("filter-kategori").value;
+  const list = document.getElementById("task-list");
+  list.innerHTML = "";
+  tasks.forEach((t, i) => {
+    const matchDate = !filterDate || t.start <= filterDate && t.end >= filterDate;
+    const matchKategori = !kategori || t.kategori === kategori;
+    if (matchDate && matchKategori && t.status !== "Selesai") {
+      const el = document.createElement("div");
+      el.className = `task-item`;
+      el.innerHTML = `
+        <div><strong>${t.name}</strong> (${t.priority}) [${t.kategori}]</div>
+        <div>${t.desc}</div>
+        <div>⏳ ${t.start} s/d ${t.end}</div>
+        <div contenteditable onblur="updateNotes(${i}, this.innerText)">${t.notes}</div>
+        <span class="delete-btn" onclick="deleteTask(${i})">❌</span>
+        <div class="mt-2">
+          <label><input type="checkbox" class="checkbox" onchange="toggleDone(${i})" ${t.status === 'Selesai' ? 'checked' : ''}/> Tandai selesai</label>
+        </div>
+      `;
+      list.appendChild(el);
+    }
+  });
+}
+
+function resetFilter() {
+  document.getElementById("filter-date").value = "";
+  document.getElementById("filter-kategori").value = "";
+  renderTasks();
 }
 
 renderTasks();
