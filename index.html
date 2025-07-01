@@ -161,7 +161,22 @@ function renderTasks() {
   tasks.forEach((t) => {
     const e = document.createElement("div");
     e.className = "task-item" + (t.status === "Selesai" ? " done" : "");
-    e.innerHTML = `<strong>${t.name}</strong> (${t.priority})<br>${t.desc}<br>⏳ ${t.start} s/d ${t.end}<br>${t.notes}`;
+e.innerHTML = `
+  <div style="display:flex; justify-content:space-between;">
+    <div>
+      <strong>${t.name}</strong> (${t.priority})<br>
+      ${t.desc}<br>
+      ⏳ ${t.start} s/d ${t.end}<br>
+      ${t.notes}
+    </div>
+    <button onclick="deleteTask(${tasks.indexOf(t)})" style="background:#ef4444;color:white;border:none;border-radius:5px;height:30px;cursor:pointer;">❌</button>
+  </div>`;
+function deleteTask(index) {
+  if (confirm("Yakin ingin menghapus tugas ini?")) {
+    tasks.splice(index, 1);
+    saveTasks();
+  }
+}
     const ed = new Date(t.end);
     const isArsip = t.status === "Selesai" && (now - ed) / 86400000 > 7;
     (isArsip ? arsip : list).appendChild(e);
