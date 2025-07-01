@@ -1,0 +1,124 @@
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Monitoring Tugas</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; background: #f4f4f4; }
+    h1 { text-align: center; }
+    .task-form, .filters { margin-bottom: 20px; }
+    .task-list { background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+    .task-item { border-bottom: 1px solid #eee; padding: 10px 0; }
+    .task-item:last-child { border-bottom: none; }
+    label { display: block; margin-top: 10px; }
+    input, select, textarea { width: 100%; padding: 8px; margin-top: 5px; }
+    button { margin-top: 10px; padding: 10px 15px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; }
+    button:hover { background: #0056b3; }
+    .done { text-decoration: line-through; color: gray; }
+  </style>
+</head>
+<body>
+  <h1>📋 Monitoring Tugas</h1>
+  <div class="task-form">
+    <h2>Tambah Tugas</h2>
+    <label>Nama Tugas <input id="task-name" type="text"></label>
+    <label>Deskripsi <textarea id="task-desc"></textarea></label>
+    <label>Tanggal Mulai <input id="start-date" type="date"></label>
+    <label>Deadline <input id="end-date" type="date"></label>
+    <label>Prioritas 
+      <select id="priority">
+        <option value="Tinggi">Tinggi</option>
+        <option value="Sedang">Sedang</option>
+        <option value="Rendah">Rendah</option>
+      </select>
+    </label>
+    <label>Status
+      <select id="status">
+        <option value="Belum">Belum</option>
+        <option value="Sedang">Sedang</option>
+        <option value="Selesai">Selesai</option>
+      </select>
+    </label>
+    <label>Catatan <textarea id="notes"></textarea></label>
+    <button onclick="addTask()">Tambah Tugas</button>
+  </div>
+
+  <div class="filters">
+    <label>Filter Status:
+      <select onchange="filterTasks(this.value)">
+        <option value="All">Semua</option>
+        <option value="Belum">Belum</option>
+        <option value="Sedang">Sedang</option>
+        <option value="Selesai">Selesai</option>
+      </select>
+    </label>
+  </div>
+
+  <div class="task-list" id="task-list"></div>
+
+  <script>
+    let tasks = JSON.parse(localStorage.getItem('tasks') || '[]');
+
+    function saveTasks() {
+      localStorage.setItem('tasks', JSON.stringify(tasks));
+    }
+
+    function renderTasks(filter = 'All') {
+      const list = document.getElementById('task-list');
+      list.innerHTML = '';
+      tasks.filter(task => filter === 'All' || task.status === filter)
+        .forEach((task, i) => {
+          const div = document.createElement('div');
+          div.className = 'task-item';
+          div.innerHTML = `
+            <strong class="${task.status === 'Selesai' ? 'done' : ''}">${task.name}</strong><br>
+            ${task.desc}<br>
+            📅 ${task.start} - ${task.end} | 🔥 ${task.priority} | 📌 ${task.status}<br>
+            📝 ${task.notes}<br>
+            <button onclick="markDone(${i})">Tandai Selesai</button>
+            <button onclick="deleteTask(${i})">Hapus</button>
+          `;
+          list.appendChild(div);
+        });
+    }
+
+    function addTask() {
+      const task = {
+        name: document.getElementById('task-name').value,
+        desc: document.getElementById('task-desc').value,
+        start: document.getElementById('start-date').value,
+        end: document.getElementById('end-date').value,
+        priority: document.getElementById('priority').value,
+        status: document.getElementById('status').value,
+        notes: document.getElementById('notes').value
+      };
+      tasks.push(task);
+      saveTasks();
+      renderTasks();
+      document.querySelectorAll('.task-form input, .task-form textarea').forEach(el => el.value = '');
+    }
+
+    function markDone(index) {
+      tasks[index].status = 'Selesai';
+      saveTasks();
+      renderTasks();
+    }
+
+    function deleteTask(index) {
+      if (confirm('Hapus tugas ini?')) {
+        tasks.splice(index, 1);
+        saveTasks();
+        renderTasks();
+      }
+    }
+
+    function filterTasks(val) {
+      renderTasks(val);
+    }
+
+    renderTasks();
+  </script>
+</body>
+</html>
