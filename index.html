@@ -14,10 +14,12 @@
     nav button.active { background-color: #2563eb; color: white; }
     section { display: none; padding: 1rem; }
     section.active { display: block; }
-    .task-item { background: #334155; padding: 10px; margin-bottom: 10px; border-radius: 5px; }
+    .task-item { background: #334155; padding: 10px; margin-bottom: 10px; border-radius: 5px; position: relative; }
     .task-item.done { opacity: 0.6; text-decoration: line-through; }
     .notification { background: #facc15; color: #1e293b; padding: 8px; margin: 5px 0; border-radius: 5px; }
     .stats { max-width: 400px; margin: 20px auto; }
+    .delete-btn { position: absolute; top: 10px; right: 10px; background: #dc2626; padding: 4px 8px; border-radius: 4px; color: white; cursor: pointer; }
+    .checkbox { margin-right: 8px; }
   </style>
 </head>
 <body>
@@ -40,6 +42,9 @@
       <input type="date" id="end" class="w-full p-2 rounded bg-gray-700" />
       <select id="priority" class="w-full p-2 rounded bg-gray-700">
         <option>Tinggi</option><option>Menengah</option><option>Rendah</option>
+      </select>
+      <select id="kategori" class="w-full p-2 rounded bg-gray-700">
+        <option>Rutin</option><option>Ad-hoc</option>
       </select>
       <select id="status" class="w-full p-2 rounded bg-gray-700">
         <option>Belum</option><option>Selesai</option>
@@ -85,6 +90,7 @@ function addTask() {
     start: document.getElementById("start").value,
     end: document.getElementById("end").value,
     priority: document.getElementById("priority").value,
+    kategori: document.getElementById("kategori").value,
     status: document.getElementById("status").value,
     notes: document.getElementById("notes").value,
   };
@@ -93,136 +99,54 @@ function addTask() {
   document.querySelector("form").reset();
 }
 
-function deleteTask(index) {
-  if (confirm("Yakin ingin menghapus tugas ini?")) {
-    tasks.splice(index, 1);
-    saveTasks();
-  }
+function renderTasks() {
+  const list = document.getElementById("task-list");
+  const arsip = document.getElementById("arsip-list");
+  list.innerHTML = arsip.innerHTML = "";
+  tasks.forEach((t, i) => {
+    const el = document.createElement("div");
+    el.className = `task-item ${t.status === 'Selesai' ? 'done' : ''}`;
+    el.innerHTML = `
+      <div><strong>${t.name}</strong> (${t.priority}) [${t.kategori}]</div>
+      <div>${t.desc}</div>
+      <div>⏳ ${t.start} s/d ${t.end}</div>
+      <div contenteditable onblur="updateNotes(${i}, this.innerText)">${t.notes}</div>
+      <input type="checkbox" class="checkbox" onchange="toggleDone(${i})" ${t.status === 'Selesai' ? 'checked' : ''}/> Tandai selesai
+      <span class="delete-btn" onclick="deleteTask(${i})">❌</span>
+    `;
+    if (t.status === "Selesai") arsip.appendChild(el);
+    else list.appendChild(el);
+  });
 }
 
-function toggleStatus(index) {
-  tasks[index].status = tasks[index].status === "Selesai" ? "Belum" : "Selesai";
+function deleteTask(i) {
+  tasks.splice(i, 1);
   saveTasks();
 }
 
-function editNotes(index) {
-  const newNote = prompt("Edit Catatan:", tasks[index].notes);
-  if (newNote !== null) {
-    tasks[index].notes = newNote;
-    saveTasks();
-  }
+function toggleDone(i) {
+  tasks[i].status = tasks[i].status === "Selesai" ? "Belum" : "Selesai";
+  saveTasks();
 }
 
-function renderTasks() {
-  const now = new Date();
-  let selesai = 0, belum = 0;
-  const list = document.getElementById("task-list"),
-        arsip = document.getElementById("arsip-list"),
-        alerts = document.getElementById("deadline-alerts");
-  list.innerHTML = ""; arsip.innerHTML = ""; alerts.innerHTML = "";
-
-  tasks.forEach((t, index) => {
-    const e = document.createElement("div");
-    e.className = "task-item" + (t.status === "Selesai" ? " done" : "");
-    e.innerHTML = `
-      <div style="display:flex; justify-content:space-between; align-items: start;">
-        <div>
-          <strong>${t.name}</strong> (${t.priority})<br>
-          ${t.desc}<br>
-          ⏳ ${t.start} s/d ${t.end}<br>
-          <span onclick="editNotes(${index})" style="cursor:pointer;">${t.notes}</span>
-        </div>
-        <div class="flex flex-col items-end space-y-1">
-          <button onclick="toggleStatus(${index})" style="background:#10b981;color:white;border:none;border-radius:5px;height:30px;width:30px;">✔</button>
-          <button onclick="deleteTask(${index})" style="background:#ef4444;color:white;border:none;border-radius:5px;height:30px;width:30px;">❌</button>
-        </div>
-      </div>`;
-    const ed = new Date(t.end);
-    const isArsip = t.status === "Selesai" && (now - ed) / 86400000 > 7;
-    (isArsip ? arsip : list).appendChild(e);
-
-    if (t.status === "Selesai") selesai++; else belum++;
-
-    if (t.status !== "Selesai" && ed - now < 3 * 86400000 && ed - now > 0) {
-      const alert = document.createElement("div");
-      alert.className = "notification";
-      alert.textContent = `⏰ Deadline "${t.name}" tinggal ${Math.ceil((ed - now) / 86400000)} hari!`;
-      alerts.appendChild(alert);
-    }
-  });
-
-  if (window.taskChart) window.taskChart.destroy();
-  window.taskChart = new Chart(document.getElementById("taskChart"), {
-    type: 'doughnut',
-    data: {
-      labels: ['Selesai', 'Belum'],
-      datasets: [{ data: [selesai || 0.1, belum || 0.1], backgroundColor: ['#10b981', '#f43f5e'] }]
-    }
-  });
+function updateNotes(i, val) {
+  tasks[i].notes = val;
+  saveTasks();
 }
 
 function showTab(tab) {
   document.querySelectorAll("section").forEach(s => s.classList.remove("active"));
-  document.querySelectorAll("nav button").forEach(b => b.classList.remove("active"));
-  document.getElementById(tab).classList.add("active");
-  document.getElementById("tab-" + tab).classList.add("active");
-  if (tab === "statistik") renderTasks();
-}
-
-function filterByDate() {
-  const f = document.getElementById("filter-date").value;
-  const list = document.getElementById("task-list");
-  list.innerHTML = "";
-  tasks.forEach((t, index) => {
-    if (t.start <= f && t.end >= f) {
-      const e = document.createElement("div");
-      e.className = "task-item" + (t.status === "Selesai" ? " done" : "");
-      e.innerHTML = `
-        <div style="display:flex; justify-content:space-between; align-items: start;">
-          <div>
-            <strong>${t.name}</strong> (${t.priority})<br>
-            ${t.desc}<br>
-            ⏳ ${t.start} s/d ${t.end}<br>
-            <span onclick="editNotes(${index})" style="cursor:pointer;">${t.notes}</span>
-          </div>
-          <div class="flex flex-col items-end space-y-1">
-            <button onclick="toggleStatus(${index})" style="background:#10b981;color:white;border:none;border-radius:5px;height:30px;width:30px;">✔</button>
-            <button onclick="deleteTask(${index})" style="background:#ef4444;color:white;border:none;border-radius:5px;height:30px;width:30px;">❌</button>
-          </div>
-        </div>`;
-      list.appendChild(e);
-    }
-  });
-}
-
-function resetFilter() {
-  document.getElementById("filter-date").value = "";
-  renderTasks();
+  document.querySelector(`#${tab}`).classList.add("active");
 }
 
 function exportToExcel() {
-  const ws = XLSX.utils.json_to_sheet(tasks);
   const wb = XLSX.utils.book_new();
+  const ws = XLSX.utils.json_to_sheet(tasks);
   XLSX.utils.book_append_sheet(wb, ws, "Tugas");
-  XLSX.writeFile(wb, "Monitoring-Tugas.xlsx");
+  XLSX.writeFile(wb, "tugas.xlsx");
 }
 
-document.addEventListener('DOMContentLoaded', function () {
-  const calEl = document.getElementById('calendar');
-  const calendar = new FullCalendar.Calendar(calEl, {
-    initialView: 'dayGridMonth',
-    height: 600,
-    events: tasks.map(t => ({
-      title: t.name,
-      start: t.start,
-      end: t.end ? new Date(new Date(t.end).getTime() + 86400000).toISOString().split('T')[0] : undefined,
-      color: t.status === 'Selesai' ? '#10b981' : (t.priority === 'Tinggi' ? '#f43f5e' : '#facc15')
-    }))
-  });
-  calendar.render();
-  window.fullCalendarInstance = calendar;
-  renderTasks();
-});
+renderTasks();
 </script>
 </body>
 </html>
