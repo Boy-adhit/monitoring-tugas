@@ -166,6 +166,7 @@ function showTab(tab) {
   document.querySelectorAll("nav button").forEach(b => b.classList.remove("active"));
   document.getElementById(tab).classList.add("active");
   document.getElementById("tab-" + tab).classList.add("active");
+  if (tab === "statistik") renderTasks();
 }
 
 function filterByDate() {
