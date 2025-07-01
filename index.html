@@ -70,7 +70,7 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.4/index.global.min.js"></script>
 
- <script>
+  <script>
 function showTab(tabId) {
   document.querySelectorAll("section").forEach(s => s.classList.add("hidden"));
   document.getElementById(tabId).classList.remove("hidden");
@@ -128,11 +128,15 @@ function renderTasks() {
   const tasks = getTasks().filter(t => t.status !== "Selesai" && t.status !== "Arsip");
   taskList.innerHTML = tasks.map((t, i) => `
     <div class="bg-white p-4 rounded shadow">
-      <div class="font-bold">${t.name}</div>
-      <div class="text-sm text-gray-600">${t.desc}</div>
-      <div class="text-sm text-gray-500">Mulai: ${t.start} | Deadline: ${t.end}</div>
-      <div class="text-sm text-gray-500">Prioritas: ${t.priority} | Kategori: ${t.kategori}</div>
-      <div class="text-sm text-gray-500">Catatan: ${t.notes}</div>
+      <div class="font-bold">\${t.name}</div>
+      <div class="text-sm text-gray-600">\${t.desc}</div>
+      <div class="text-sm text-gray-500">Mulai: \${t.start} | Deadline: \${t.end}</div>
+      <div class="text-sm text-gray-500">Prioritas: \${t.priority} | Kategori: \${t.kategori}</div>
+      <div class="text-sm text-gray-500">Catatan: \${t.notes}</div>
+      <div class="flex gap-2 mt-2">
+        <button onclick="editTask(\${i})" class="bg-yellow-400 text-white px-3 py-1 rounded">Edit</button>
+        <button onclick="deleteTask(\${i})" class="bg-red-500 text-white px-3 py-1 rounded">Hapus</button>
+      </div>
     </div>`).join("");
 }
 
@@ -168,6 +172,26 @@ function renderCalendar() {
     }))
   });
   calendar.render();
+}
+
+function deleteTask(index) {
+  const tasks = getTasks();
+  tasks.splice(index, 1);
+  saveTasks(tasks);
+}
+
+function editTask(index) {
+  const tasks = getTasks();
+  const task = tasks[index];
+  document.getElementById("name").value = task.name;
+  document.getElementById("desc").value = task.desc;
+  document.getElementById("start").value = task.start;
+  document.getElementById("end").value = task.end;
+  document.getElementById("priority").value = task.priority;
+  document.getElementById("kategori").value = task.kategori;
+  document.getElementById("status").value = task.status;
+  document.getElementById("notes").value = task.notes;
+  deleteTask(index);
 }
 
 document.addEventListener("DOMContentLoaded", () => {
