@@ -68,7 +68,7 @@
   if (activeButton) activeButton.classList.add("bg-blue-500", "text-white");
 
   requestAnimationFrame(() => {
-    if (tabId === 'statistik') renderStats();
+    if (tabId === 'statistik') setTimeout(renderStats, 50);
     if (tabId === 'kalender') renderCalendar();
     if (tabId === 'arsip') renderArsip();
   });
@@ -170,16 +170,24 @@
     }
 
     function renderStats() {
-      const ctx = document.getElementById("taskChart").getContext("2d");
-      const tasks = getTasks();
-      const selesai = tasks.filter(t => t.status === "Selesai").length;
-      const belum = tasks.filter(t => t.status !== "Selesai").length;
-      if (window.taskChart) window.taskChart.destroy();
-      window.taskChart = new Chart(ctx, {
-        type: "doughnut",
-        data: {
-          labels: ["Selesai", "Belum"],
-          datasets: [{ data: [selesai, belum], backgroundColor: ["#10b981", "#ef4444"] }]
+  const canvas = document.getElementById("taskChart");
+  if (!canvas || canvas.offsetParent === null) return; // skip if canvas not visible
+
+  const ctx = canvas.getContext("2d");
+  const tasks = getTasks();
+  const selesai = tasks.filter(t => t.status === "Selesai").length;
+  const belum = tasks.filter(t => t.status !== "Selesai").length;
+
+  if (window.taskChart) window.taskChart.destroy();
+
+  window.taskChart = new Chart(ctx, {
+    type: "doughnut",
+    data: {
+      labels: ["Selesai", "Belum"],
+      datasets: [{ data: [selesai, belum], backgroundColor: ["#10b981", "#ef4444"] }]
+    }
+  });
+}]
         }
       });
     }
