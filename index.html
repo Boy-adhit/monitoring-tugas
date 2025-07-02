@@ -61,17 +61,17 @@
     let editingIndex = null;
 
     function showTab(tabId) {
-      document.querySelectorAll("section").forEach(s => s.classList.add("hidden"));
-      document.getElementById(tabId).classList.remove("hidden");
-      document.querySelectorAll("nav button").forEach(b => b.classList.remove("bg-blue-500", "text-white"));
-      const activeButton = document.getElementById(`tab-${tabId}`);
-      if (activeButton) activeButton.classList.add("bg-blue-500", "text-white");
+  document.querySelectorAll("section").forEach(s => s.classList.add("hidden"));
+  document.getElementById(tabId).classList.remove("hidden");
+  document.querySelectorAll("nav button").forEach(b => b.classList.remove("bg-blue-500", "text-white"));
+  const activeButton = document.getElementById(`tab-${tabId}`);
+  if (activeButton) activeButton.classList.add("bg-blue-500", "text-white");
 
-      setTimeout(() => {
-        if (tabId === 'statistik') renderStats();
-        if (tabId === 'kalender') renderCalendar();
-        if (tabId === 'arsip') renderArsip();
-      }, 10);
+  requestAnimationFrame(() => {
+    if (tabId === 'statistik') renderStats();
+    if (tabId === 'kalender') renderCalendar();
+    if (tabId === 'arsip') renderArsip();
+  });
     }
 
     function getTasks() {
