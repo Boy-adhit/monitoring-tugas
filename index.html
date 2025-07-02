@@ -1,16 +1,18 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Monitoring Tugas Web</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Monitoring Tugas</title>
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.4/index.global.min.js"></script>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.4/index.global.min.css">
 </head>
 <body class="bg-gray-100 text-gray-800">
-  <div class="max-w-5xl mx-auto p-4">
-    <h1 class="text-3xl font-bold mb-4">📋 Monitoring Tugas</h1>
-    <nav class="flex gap-2 mb-4">
+  <div class="max-w-4xl mx-auto py-6 px-4">
+    <h1 class="text-3xl font-bold mb-6">📋 Monitoring Tugas</h1>
+    <nav class="flex gap-2 mb-6">
       <button onclick="showTab('daftar')" id="tab-daftar" class="px-4 py-2 bg-blue-500 text-white rounded">Daftar Tugas</button>
       <button onclick="showTab('statistik')" id="tab-statistik" class="px-4 py-2 bg-gray-300 rounded">Statistik</button>
       <button onclick="showTab('kalender')" id="tab-kalender" class="px-4 py-2 bg-gray-300 rounded">Kalender</button>
@@ -39,23 +41,11 @@
         <input class="border p-2 rounded" type="text" id="notes" placeholder="Catatan" />
         <button class="bg-green-500 text-white p-2 rounded col-span-full md:col-span-1" type="submit">Tambah</button>
       </form>
-      <div class="mb-4">
-        <label class="block mb-1">Filter Tanggal:</label>
-        <input class="border p-2 rounded" type="date" id="filterDate" onchange="filterByDate()">
-        <label class="block mt-2 mb-1">Kategori:</label>
-        <select class="border p-2 rounded" id="filterKategori" onchange="filterByDate()">
-          <option value="">Semua</option>
-          <option value="Rutin">Rutin</option>
-          <option value="Ad-hoc">Ad-hoc</option>
-        </select>
-        <button class="ml-2 px-4 py-2 bg-gray-500 text-white rounded" onclick="resetFilter()">Reset</button>
-      </div>
       <div id="task-list" class="space-y-3"></div>
     </section>
 
     <section id="statistik" class="hidden">
       <canvas id="taskChart" height="150" class="mb-4"></canvas>
-      <div id="deadline-alerts" class="space-y-2"></div>
     </section>
 
     <section id="kalender" class="hidden">
@@ -67,158 +57,119 @@
     </section>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.4/index.global.min.js"></script>
   <script>
-function showTab(tabId) {
-  document.querySelectorAll("section").forEach(s => s.classList.add("hidden"));
-  document.getElementById(tabId).classList.remove("hidden");
+    function showTab(tabId) {
+      document.querySelectorAll("section").forEach(s => s.classList.add("hidden"));
+      document.getElementById(tabId).classList.remove("hidden");
+      document.querySelectorAll("nav button").forEach(b => b.classList.remove("bg-blue-500", "text-white"));
+      const activeButton = document.getElementById(`tab-${tabId}`);
+      if (activeButton) activeButton.classList.add("bg-blue-500", "text-white");
 
-  document.querySelectorAll("nav button").forEach(b => b.classList.remove("bg-blue-500", "text-white"));
-  const activeButton = document.getElementById(`tab-${tabId}`);
-  if (activeButton) activeButton.classList.add("bg-blue-500", "text-white");
-
-  switch (tabId) {
-    case "daftar": renderTasks(); break;
-    case "statistik": renderStats(); break;
-    case "kalender": renderCalendar(); break;
-    case "arsip": renderArsip(); break;
-  }
-}
-
-function getTasks() {
-  return JSON.parse(localStorage.getItem("tasks") || "[]");
-}
-
-function saveTasks(tasks) {
-  localStorage.setItem("tasks", JSON.stringify(tasks));
-  renderTasks();
-  renderStats();
-  renderCalendar();
-  renderArsip();
-}
-
-let editingIndex = null;
-
-function addTask() {
-  const name = document.getElementById("name").value.trim();
-  const desc = document.getElementById("desc").value.trim();
-  const start = document.getElementById("start").value;
-  const end = document.getElementById("end").value;
-  const priority = document.getElementById("priority").value;
-  const kategori = document.getElementById("kategori").value;
-  const status = document.getElementById("status").value;
-  const notes = document.getElementById("notes").value.trim();
-
-  const newTask = { name, desc, start, end, priority, kategori, status, notes };
-  let tasks = getTasks();
-
-  if (editingIndex !== null) {
-    tasks[editingIndex] = newTask;
-    editingIndex = null;
-  } else {
-    tasks.push(newTask);
-  }
-
-  saveTasks(tasks);
-  document.querySelector("form").reset();
-}
-
-function renderTasks() {
-  const taskList = document.getElementById("task-list");
-  const tasks = getTasks().filter(t => t.status !== "Selesai" && t.status !== "Arsip");
-  taskList.innerHTML = tasks.map((t, i) => `
-    <div class="bg-white p-4 rounded shadow">
-      <div class="font-bold">\${t.name}</div>
-      <div class="text-sm text-gray-600">\${t.desc}</div>
-      <div class="text-sm text-gray-500">Mulai: \${t.start} | Deadline: \${t.end}</div>
-      <div class="text-sm text-gray-500">Prioritas: \${t.priority} | Kategori: \${t.kategori}</div>
-      <div class="text-sm text-gray-500">Catatan: \${t.notes}</div>
-      <div class="flex gap-2 mt-2">
-        <button onclick="editTask(\${i})" class="bg-yellow-400 text-white px-3 py-1 rounded">Edit</button>
-        <button onclick="deleteTask(\${i})" class="bg-red-500 text-white px-3 py-1 rounded">Hapus</button>
-      </div>
-    </div>`).join("");
-}
-
-function deleteTask(index) {
-  if (!confirm("Apakah Anda yakin ingin menghapus tugas ini?")) return;
-  let tasks = getTasks();
-  tasks.splice(index, 1);
-  saveTasks(tasks);
-}
-
-function editTask(index) {
-  const task = getTasks()[index];
-  document.getElementById("name").value = task.name;
-  document.getElementById("desc").value = task.desc;
-  document.getElementById("start").value = task.start;
-  document.getElementById("end").value = task.end;
-  document.getElementById("priority").value = task.priority;
-  document.getElementById("kategori").value = task.kategori;
-  document.getElementById("status").value = task.status;
-  document.getElementById("notes").value = task.notes;
-  editingIndex = index;
-  showTab('daftar');
-}
-
-function renderStats() {
-  const tasks = getTasks();
-  const selesai = tasks.filter(t => t.status === "Selesai").length;
-  const belum = tasks.filter(t => t.status === "Belum").length;
-  const ctx = document.getElementById("taskChart").getContext("2d");
-  if (window.taskChart) window.taskChart.destroy();
-  window.taskChart = new Chart(ctx, {
-    type: "doughnut",
-    data: {
-      labels: ["Selesai", "Belum"],
-      datasets: [{ data: [selesai, belum], backgroundColor: ["#10b981", "#ef4444"] }]
+      if (tabId === 'statistik') renderStats();
+      if (tabId === 'kalender') renderCalendar();
+      if (tabId === 'arsip') renderArsip();
     }
-  });
-}
 
-let calendarInstance = null;
-function renderCalendar() {
-  const calendarEl = document.getElementById('calendar');
-  calendarEl.innerHTML = '';
-  if (calendarInstance) calendarInstance.destroy();
-  calendarInstance = new FullCalendar.Calendar(calendarEl, {
-    initialView: 'dayGridMonth',
-    headerToolbar: { left: 'prev,next today', center: 'title', right: 'dayGridMonth,timeGridWeek,listWeek' },
-    events: getTasks().filter(t => t.status !== 'Arsip').map(task => ({
-      title: task.name, start: task.start, end: task.end || task.start
-    }))
-  });
-  calendarInstance.render();
-}
+    function getTasks() {
+      return JSON.parse(localStorage.getItem("tasks") || "[]");
+    }
 
-function renderArsip() {
-  const arsipList = document.getElementById("arsip-list");
-  const arsipTasks = getTasks().filter(t => t.status === "Selesai" || t.status === "Arsip");
-  arsipList.innerHTML = arsipTasks.map(t => `
-    <div class="bg-gray-200 p-3 rounded">
-      <div class="font-semibold">\${t.name}</div>
-      <div class="text-sm text-gray-600">\${t.desc}</div>
-    </div>
-  `).join("");
-}
+    function saveTasks(tasks) {
+      localStorage.setItem("tasks", JSON.stringify(tasks));
+      renderTasks();
+    }
 
-function filterByDate() {
-  renderTasks();
-}
-function resetFilter() {
-  document.getElementById("filterDate").value = "";
-  document.getElementById("filterKategori").value = "";
-  renderTasks();
-}
+    function addTask() {
+      const tasks = getTasks();
+      tasks.push({
+        name: name.value,
+        desc: desc.value,
+        start: start.value,
+        end: end.value,
+        priority: priority.value,
+        kategori: kategori.value,
+        status: status.value,
+        notes: notes.value
+      });
+      saveTasks(tasks);
+      document.querySelector("form").reset();
+    }
 
-document.addEventListener("DOMContentLoaded", () => {
-  showTab('daftar');
-  renderTasks();
-  renderStats();
-  renderCalendar();
-  renderArsip();
-});
+    function renderTasks() {
+      const taskList = document.getElementById("task-list");
+      const tasks = getTasks().filter(t => t.status !== "Selesai");
+      taskList.innerHTML = tasks.map((t, i) => `
+        <div class="bg-white p-4 rounded shadow">
+          <div class="font-bold">\${t.name}</div>
+          <div class="text-sm text-gray-600">\${t.desc}</div>
+          <div class="text-sm text-gray-500">Mulai: \${t.start} | Deadline: \${t.end}</div>
+          <div class="text-sm text-gray-500">Prioritas: \${t.priority} | Kategori: \${t.kategori}</div>
+          <div class="text-sm text-gray-500">Catatan: \${t.notes}</div>
+          <div class="flex gap-2 mt-2">
+            <button onclick="deleteTask(\${i})" class="bg-red-500 text-white px-3 py-1 rounded">Hapus</button>
+            <button onclick="markAsDone(\${i})" class="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded flex items-center">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8.01 8.01a1 1 0 01-1.414 0l-3.01-3.01a1 1 0 111.414-1.414l2.303 2.303 7.303-7.303a1 1 0 011.414 0z" clip-rule="evenodd" />
+              </svg>
+              Selesai
+            </button>
+          </div>
+        </div>
+      `).join("");
+    }
+
+    function markAsDone(i) {
+      const tasks = getTasks();
+      tasks[i].status = "Selesai";
+      saveTasks(tasks);
+    }
+
+    function deleteTask(i) {
+      if (!confirm("Yakin ingin menghapus tugas ini?")) return;
+      const tasks = getTasks();
+      tasks.splice(i, 1);
+      saveTasks(tasks);
+    }
+
+    function renderStats() {
+      const ctx = document.getElementById("taskChart").getContext("2d");
+      const tasks = getTasks();
+      const selesai = tasks.filter(t => t.status === "Selesai").length;
+      const belum = tasks.filter(t => t.status !== "Selesai").length;
+      if (window.taskChart) window.taskChart.destroy();
+      window.taskChart = new Chart(ctx, {
+        type: "doughnut",
+        data: {
+          labels: ["Selesai", "Belum"],
+          datasets: [{ data: [selesai, belum], backgroundColor: ["#10b981", "#ef4444"] }]
+        }
+      });
+    }
+
+    function renderCalendar() {
+      const calendarEl = document.getElementById('calendar');
+      calendarEl.innerHTML = '';
+      const tasks = getTasks();
+      const events = tasks.map(t => ({ title: t.name, start: t.start, end: t.end }));
+      new FullCalendar.Calendar(calendarEl, {
+        initialView: 'dayGridMonth',
+        events
+      }).render();
+    }
+
+    function renderArsip() {
+      const arsipList = document.getElementById("arsip-list");
+      const tasks = getTasks().filter(t => t.status === "Selesai");
+      arsipList.innerHTML = tasks.map(t => `<div class="bg-gray-200 p-3 rounded">
+        <div class="font-semibold">\${t.name}</div>
+        <div class="text-sm">\${t.desc}</div>
+      </div>`).join("");
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      showTab('daftar');
+      renderTasks();
+    });
   </script>
 </body>
 </html>
