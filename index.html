@@ -84,17 +84,27 @@
     }
 
     function addTask() {
-      const tasks = getTasks();
+      const nameInput = document.getElementById("name");
+      const descInput = document.getElementById("desc");
+      const startInput = document.getElementById("start");
+      const endInput = document.getElementById("end");
+      const priorityInput = document.getElementById("priority");
+      const kategoriInput = document.getElementById("kategori");
+      const statusInput = document.getElementById("status");
+      const notesInput = document.getElementById("notes");
+
       const task = {
-        name: name.value,
-        desc: desc.value,
-        start: start.value,
-        end: end.value,
-        priority: priority.value,
-        kategori: kategori.value,
-        status: status.value,
-        notes: notes.value
+        name: nameInput.value,
+        desc: descInput.value,
+        start: startInput.value,
+        end: endInput.value,
+        priority: priorityInput.value,
+        kategori: kategoriInput.value,
+        status: statusInput.value,
+        notes: notesInput.value
       };
+
+      const tasks = getTasks();
 
       if (editingIndex !== null) {
         tasks[editingIndex] = task;
@@ -104,7 +114,7 @@
       }
 
       saveTasks(tasks);
-      document.querySelector("#task-form").reset();
+      document.getElementById("task-form").reset();
     }
 
     function renderTasks() {
@@ -146,14 +156,14 @@
     function editTask(i) {
       const tasks = getTasks();
       const t = tasks[i];
-      name.value = t.name;
-      desc.value = t.desc;
-      start.value = t.start;
-      end.value = t.end;
-      priority.value = t.priority;
-      kategori.value = t.kategori;
-      status.value = t.status;
-      notes.value = t.notes;
+      document.getElementById("name").value = t.name;
+      document.getElementById("desc").value = t.desc;
+      document.getElementById("start").value = t.start;
+      document.getElementById("end").value = t.end;
+      document.getElementById("priority").value = t.priority;
+      document.getElementById("kategori").value = t.kategori;
+      document.getElementById("status").value = t.status;
+      document.getElementById("notes").value = t.notes;
       editingIndex = i;
     }
 
