@@ -79,6 +79,8 @@
     function saveTasks(tasks) {
       localStorage.setItem("tasks", JSON.stringify(tasks));
       renderTasks();
+      renderStats();
+      renderCalendar();
     }
 
     function addTask() {
@@ -113,35 +115,19 @@
         const div = document.createElement("div");
         div.className = "bg-white p-4 rounded shadow";
         div.innerHTML = `
-          <div class="font-bold">\${t.name}</div>
-          <div class="text-sm text-gray-600">\${t.desc}</div>
-          <div class="text-sm text-gray-500">Mulai: \${t.start} | Deadline: \${t.end}</div>
-          <div class="text-sm text-gray-500">Prioritas: \${t.priority} | Kategori: \${t.kategori}</div>
-          <div class="text-sm text-gray-500">Catatan: \${t.notes}</div>
+          <div class="font-bold">${t.name}</div>
+          <div class="text-sm text-gray-600">${t.desc}</div>
+          <div class="text-sm text-gray-500">Mulai: ${t.start} | Deadline: ${t.end}</div>
+          <div class="text-sm text-gray-500">Prioritas: ${t.priority} | Kategori: ${t.kategori}</div>
+          <div class="text-sm text-gray-500">Catatan: ${t.notes}</div>
           <div class="flex gap-2 mt-2">
-            <button class="hapus-btn bg-red-500 text-white px-3 py-1 rounded" data-index="\${i}">Hapus</button>
-            <button class="selesai-btn bg-green-500 text-white px-3 py-1 rounded" data-index="\${i}">✔</button>
-            <button class="edit-btn bg-yellow-400 text-black px-3 py-1 rounded" data-index="\${i}">Edit</button>
+            <button onclick="deleteTask(${i})" class="bg-red-500 text-white px-3 py-1 rounded">Hapus</button>
+            <button onclick="markAsDone(${i})" class="bg-green-500 text-white px-3 py-1 rounded">✔</button>
+            <button onclick="editTask(${i})" class="bg-yellow-400 text-black px-3 py-1 rounded">Edit</button>
           </div>
         `;
         taskList.appendChild(div);
       });
-      addEventListeners();
-    }
-
-    function addEventListeners() {
-      document.querySelectorAll(".hapus-btn").forEach(btn => btn.addEventListener("click", () => {
-        const i = btn.getAttribute("data-index");
-        deleteTask(i);
-      }));
-      document.querySelectorAll(".selesai-btn").forEach(btn => btn.addEventListener("click", () => {
-        const i = btn.getAttribute("data-index");
-        markAsDone(i);
-      }));
-      document.querySelectorAll(".edit-btn").forEach(btn => btn.addEventListener("click", () => {
-        const i = btn.getAttribute("data-index");
-        editTask(i);
-      }));
     }
 
     function markAsDone(i) {
@@ -201,8 +187,8 @@
       const arsipList = document.getElementById("arsip-list");
       const tasks = getTasks().filter(t => t.status === "Selesai");
       arsipList.innerHTML = tasks.map(t => `<div class="bg-gray-200 p-3 rounded">
-        <div class="font-semibold">\${t.name}</div>
-        <div class="text-sm">\${t.desc}</div>
+        <div class="font-semibold">${t.name}</div>
+        <div class="text-sm">${t.desc}</div>
       </div>`).join("");
     }
 
