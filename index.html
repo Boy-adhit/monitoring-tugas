@@ -180,7 +180,7 @@
   const selesai = tasks.filter(t => t.status === "Selesai").length;
   const belum = tasks.filter(t => t.status !== "Selesai").length;
 
-  if (window.taskChart) window.taskChart.destroy();
+  if (window.taskChart instanceof Chart) window.taskChart.destroy();
 
   window.taskChart = new Chart(ctx, {
     type: "doughnut",
