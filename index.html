@@ -67,9 +67,11 @@
       const activeButton = document.getElementById(`tab-${tabId}`);
       if (activeButton) activeButton.classList.add("bg-blue-500", "text-white");
 
-      if (tabId === 'statistik') renderStats();
-      if (tabId === 'kalender') renderCalendar();
-      if (tabId === 'arsip') renderArsip();
+      setTimeout(() => {
+        if (tabId === 'statistik') renderStats();
+        if (tabId === 'kalender') renderCalendar();
+        if (tabId === 'arsip') renderArsip();
+      }, 10);
     }
 
     function getTasks() {
