@@ -107,12 +107,8 @@
           <div class="text-sm text-gray-500">Catatan: \${t.notes}</div>
           <div class="flex gap-2 mt-2">
             <button onclick="deleteTask(\${i})" class="bg-red-500 text-white px-3 py-1 rounded">Hapus</button>
-            <button onclick="markAsDone(\${i})" class="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded flex items-center">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
-                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8.01 8.01a1 1 0 01-1.414 0l-3.01-3.01a1 1 0 111.414-1.414l2.303 2.303 7.303-7.303a1 1 0 011.414 0z" clip-rule="evenodd" />
-              </svg>
-              Selesai
-            </button>
+            <button onclick="markAsDone(\${i})" class="bg-green-500 text-white px-3 py-1 rounded">✔</button>
+            <button onclick="editTask(\${i})" class="bg-yellow-400 text-black px-3 py-1 rounded">Edit</button>
           </div>
         </div>
       `).join("");
@@ -127,6 +123,21 @@
     function deleteTask(i) {
       if (!confirm("Yakin ingin menghapus tugas ini?")) return;
       const tasks = getTasks();
+      tasks.splice(i, 1);
+      saveTasks(tasks);
+    }
+
+    function editTask(i) {
+      const tasks = getTasks();
+      const t = tasks[i];
+      name.value = t.name;
+      desc.value = t.desc;
+      start.value = t.start;
+      end.value = t.end;
+      priority.value = t.priority;
+      kategori.value = t.kategori;
+      status.value = t.status;
+      notes.value = t.notes;
       tasks.splice(i, 1);
       saveTasks(tasks);
     }
