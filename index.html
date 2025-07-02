@@ -141,6 +141,27 @@ function renderTasks() {
     </div>`).join("");
 }
 
+function deleteTask(index) {
+  if (!confirm("Apakah Anda yakin ingin menghapus tugas ini?")) return;
+  let tasks = getTasks();
+  tasks.splice(index, 1);
+  saveTasks(tasks);
+}
+
+function editTask(index) {
+  const task = getTasks()[index];
+  document.getElementById("name").value = task.name;
+  document.getElementById("desc").value = task.desc;
+  document.getElementById("start").value = task.start;
+  document.getElementById("end").value = task.end;
+  document.getElementById("priority").value = task.priority;
+  document.getElementById("kategori").value = task.kategori;
+  document.getElementById("status").value = task.status;
+  document.getElementById("notes").value = task.notes;
+  editingIndex = index;
+  showTab('daftar');
+}
+
 function renderStats() {
   const tasks = getTasks();
   const selesai = tasks.filter(t => t.status === "Selesai").length;
@@ -180,27 +201,6 @@ function renderArsip() {
       <div class="text-sm text-gray-600">\${t.desc}</div>
     </div>
   `).join("");
-}
-
-function deleteTask(index) {
-  if (!confirm("Apakah Anda yakin ingin menghapus tugas ini?")) return;
-  const tasks = getTasks();
-  tasks.splice(index, 1);
-  saveTasks(tasks);
-}
-
-function editTask(index) {
-  const tasks = getTasks();
-  const task = tasks[index];
-  document.getElementById("name").value = task.name;
-  document.getElementById("desc").value = task.desc;
-  document.getElementById("start").value = task.start;
-  document.getElementById("end").value = task.end;
-  document.getElementById("priority").value = task.priority;
-  document.getElementById("kategori").value = task.kategori;
-  document.getElementById("status").value = task.status;
-  document.getElementById("notes").value = task.notes;
-  editingIndex = index;
 }
 
 function filterByDate() {
