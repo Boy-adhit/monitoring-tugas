@@ -145,10 +145,14 @@
     }
 
     function markAsDone(i) {
-      const tasks = getTasks();
-      tasks[i].status = "Selesai";
-      saveTasks(tasks);
-    }
+  const tasks = getTasks();
+  tasks[i].status = "Selesai";
+  saveTasks(tasks);
+  renderTasks();
+  renderArsip();
+  renderStats();
+  renderCalendar();
+}
 
     function deleteTask(i) {
       if (!confirm("Yakin ingin menghapus tugas ini?")) return;
