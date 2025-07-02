@@ -106,8 +106,7 @@ function showTab(tabId) {
       break;
   }
 }
-  
-}
+
 document.addEventListener('DOMContentLoaded', function () {
   const calendarEl = document.getElementById('calendar');
   const calendar = new FullCalendar.Calendar(calendarEl, {
@@ -138,13 +137,29 @@ function getTasks() {
 
 let editingIndex = null;
 
-function addTask() {$1if (editingIndex !== null) {
+function addTask() {
+  const name = document.getElementById("name").value.trim();
+  const desc = document.getElementById("desc").value.trim();
+  const start = document.getElementById("start").value;
+  const end = document.getElementById("end").value;
+  const priority = document.getElementById("priority").value;
+  const kategori = document.getElementById("kategori").value;
+  const status = document.getElementById("status").value;
+  const notes = document.getElementById("notes").value.trim();
+
+  const newTask = { name, desc, start, end, priority, kategori, status, notes };
+  let tasks = getTasks();
+
+  if (editingIndex !== null) {
     tasks[editingIndex] = newTask;
     editingIndex = null;
   } else {
     tasks.push(newTask);
   }
+
   saveTasks(tasks);
+  document.querySelector("form").reset();
+}
   document.querySelector("form").reset();
 }
 
