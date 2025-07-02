@@ -20,7 +20,7 @@
     </nav>
 
     <section id="daftar">
-      <form onsubmit="addTask(); return false" class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+      <form id="task-form" onsubmit="addTask(); return false" class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
         <input class="border p-2 rounded" type="text" id="name" placeholder="Nama Tugas" required />
         <input class="border p-2 rounded" type="text" id="desc" placeholder="Deskripsi" required />
         <input class="border p-2 rounded" type="date" id="start" required />
@@ -58,6 +58,8 @@
   </div>
 
   <script>
+    let editingIndex = null;
+
     function showTab(tabId) {
       document.querySelectorAll("section").forEach(s => s.classList.add("hidden"));
       document.getElementById(tabId).classList.remove("hidden");
@@ -81,7 +83,7 @@
 
     function addTask() {
       const tasks = getTasks();
-      tasks.push({
+      const task = {
         name: name.value,
         desc: desc.value,
         start: start.value,
@@ -90,9 +92,17 @@
         kategori: kategori.value,
         status: status.value,
         notes: notes.value
-      });
+      };
+
+      if (editingIndex !== null) {
+        tasks[editingIndex] = task;
+        editingIndex = null;
+      } else {
+        tasks.push(task);
+      }
+
       saveTasks(tasks);
-      document.querySelector("form").reset();
+      document.querySelector("#task-form").reset();
     }
 
     function renderTasks() {
@@ -158,8 +168,7 @@
       kategori.value = t.kategori;
       status.value = t.status;
       notes.value = t.notes;
-      tasks.splice(i, 1);
-      saveTasks(tasks);
+      editingIndex = i;
     }
 
     function renderStats() {
