@@ -86,6 +86,7 @@ function renderArsip() {
 function showTab(tabId) {
   document.querySelectorAll("section").forEach(s => s.classList.add("hidden"));
   document.getElementById(tabId).classList.remove("hidden");
+
   document.querySelectorAll("nav button").forEach(b => b.classList.remove("bg-blue-500", "text-white"));
   const activeButton = document.getElementById(`tab-${tabId}`);
   if (activeButton) activeButton.classList.add("bg-blue-500", "text-white");
@@ -104,8 +105,7 @@ function showTab(tabId) {
       renderArsip();
       break;
   }
-}`).classList.add("bg-blue-500", "text-white");
-
+}
   if (tabId === "daftar") renderTasks();
   if (tabId === "statistik") renderStats();
   if (tabId === "kalender") renderCalendar();
