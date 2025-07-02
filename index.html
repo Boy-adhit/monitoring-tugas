@@ -68,19 +68,7 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
-function renderArsip() {
-  const arsipList = document.getElementById("arsip-list");
-  const arsipTasks = getTasks().filter(t => t.status === "Selesai" || t.status === "Arsip");
-  arsipList.innerHTML = arsipTasks.map(t => `
-    <div class="bg-gray-200 p-3 rounded">
-      <div class="font-semibold">\${t.name}</div>
-      <div class="text-sm text-gray-600">\${t.desc}</div>
-    </div>
-  `).join("");
-}
   <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.4/index.global.min.js"></script>
-
   <script>
 function showTab(tabId) {
   document.querySelectorAll("section").forEach(s => s.classList.add("hidden"));
@@ -91,47 +79,23 @@ function showTab(tabId) {
   if (activeButton) activeButton.classList.add("bg-blue-500", "text-white");
 
   switch (tabId) {
-    case "daftar":
-      renderTasks();
-      break;
-    case "statistik":
-      renderStats();
-      break;
-    case "kalender":
-      renderCalendar();
-      break;
-    case "arsip":
-      renderArsip();
-      break;
+    case "daftar": renderTasks(); break;
+    case "statistik": renderStats(); break;
+    case "kalender": renderCalendar(); break;
+    case "arsip": renderArsip(); break;
   }
 }
 
-document.addEventListener('DOMContentLoaded', function () {
-  const calendarEl = document.getElementById('calendar');
-  const calendar = new FullCalendar.Calendar(calendarEl, {
-    initialView: 'dayGridMonth',
-    headerToolbar: {
-      left: 'prev,next today',
-      center: 'title',
-      right: 'dayGridMonth,timeGridWeek,listWeek'
-    },
-    events: (JSON.parse(localStorage.getItem('tasks') || '[]')).filter(t => t.status !== 'Arsip').map(task => ({
-      title: task.name,
-      start: task.start,
-      end: task.end || task.start
-    }))
-  });
-  calendar.render();
-});
+function getTasks() {
+  return JSON.parse(localStorage.getItem("tasks") || "[]");
+}
+
 function saveTasks(tasks) {
   localStorage.setItem("tasks", JSON.stringify(tasks));
   renderTasks();
   renderStats();
   renderCalendar();
-}
-
-function getTasks() {
-  return JSON.parse(localStorage.getItem("tasks") || "[]");
+  renderArsip();
 }
 
 let editingIndex = null;
@@ -158,7 +122,6 @@ function addTask() {
 
   saveTasks(tasks);
   document.querySelector("form").reset();
-}
 }
 
 function renderTasks() {
@@ -194,29 +157,29 @@ function renderStats() {
 }
 
 let calendarInstance = null;
-
 function renderCalendar() {
   const calendarEl = document.getElementById('calendar');
   calendarEl.innerHTML = '';
-
-  if (calendarInstance) {
-    calendarInstance.destroy();
-  }
-
+  if (calendarInstance) calendarInstance.destroy();
   calendarInstance = new FullCalendar.Calendar(calendarEl, {
     initialView: 'dayGridMonth',
-    headerToolbar: {
-      left: 'prev,next today',
-      center: 'title',
-      right: 'dayGridMonth,timeGridWeek,listWeek'
-    },
+    headerToolbar: { left: 'prev,next today', center: 'title', right: 'dayGridMonth,timeGridWeek,listWeek' },
     events: getTasks().filter(t => t.status !== 'Arsip').map(task => ({
-      title: task.name,
-      start: task.start,
-      end: task.end || task.start
+      title: task.name, start: task.start, end: task.end || task.start
     }))
   });
   calendarInstance.render();
+}
+
+function renderArsip() {
+  const arsipList = document.getElementById("arsip-list");
+  const arsipTasks = getTasks().filter(t => t.status === "Selesai" || t.status === "Arsip");
+  arsipList.innerHTML = arsipTasks.map(t => `
+    <div class="bg-gray-200 p-3 rounded">
+      <div class="font-semibold">\${t.name}</div>
+      <div class="text-sm text-gray-600">\${t.desc}</div>
+    </div>
+  `).join("");
 }
 
 function deleteTask(index) {
@@ -239,6 +202,16 @@ function editTask(index) {
   document.getElementById("notes").value = task.notes;
   editingIndex = index;
 }
+
+function filterByDate() {
+  renderTasks();
+}
+function resetFilter() {
+  document.getElementById("filterDate").value = "";
+  document.getElementById("filterKategori").value = "";
+  renderTasks();
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   showTab('daftar');
   renderTasks();
@@ -246,6 +219,6 @@ document.addEventListener("DOMContentLoaded", () => {
   renderCalendar();
   renderArsip();
 });
-</script>
+  </script>
 </body>
 </html>
