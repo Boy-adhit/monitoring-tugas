@@ -19,8 +19,8 @@
     <h1 class="text-3xl font-bold mb-6">📋 Monitoring Tugas</h1>
     <nav class="flex flex-wrap gap-2 mb-6">
       <button onclick="showTab('daftar')" id="tab-daftar" class="px-4 py-2 bg-blue-500 text-white rounded">Daftar Tugas</button>
-      <button onclick="showTab('statistik')" id="tab-statistik" class="px-4 py-2 bg-gray-300 rounded dark:bg-gray-700">Statistik</button>
-      <button onclick="showTab('kalender')" id="tab-kalender" class="px-4 py-2 bg-gray-300 rounded dark:bg-gray-700">Kalender</button>
+      <button onclick="showTab('statistik'); renderStats();" id="tab-statistik" class="px-4 py-2 bg-gray-300 rounded dark:bg-gray-700">Statistik</button>
+      <button onclick="showTab('kalender'); renderCalendar();" id="tab-kalender" class="px-4 py-2 bg-gray-300 rounded dark:bg-gray-700">Kalender</button>
       <button onclick="showTab('arsip')" id="tab-arsip" class="px-4 py-2 bg-gray-300 rounded dark:bg-gray-700">Arsip</button>
     </nav>
 
@@ -90,6 +90,47 @@ function checkUpcomingDeadlines() {
       notif.appendChild(alertBox);
     }
   });
+}
+
+function renderStats() {
+  const tasks = getTasks();
+  const counts = {
+    Selesai: tasks.filter(t => t.status === 'Selesai').length,
+    Proses: tasks.filter(t => t.status === 'Proses').length,
+    Belum: tasks.filter(t => t.status === 'Belum').length
+  };
+  const ctx = document.getElementById('taskChart');
+  if (window.taskChart) window.taskChart.destroy();
+  window.taskChart = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: Object.keys(counts),
+      datasets: [{
+        label: 'Status Tugas',
+        data: Object.values(counts),
+        backgroundColor: ['#10B981', '#3B82F6', '#F59E0B']
+      }]
+    }
+  });
+}
+
+function renderCalendar() {
+  const calendarEl = document.getElementById('calendar');
+  calendarEl.innerHTML = "";
+  const calendar = new FullCalendar.Calendar(calendarEl, {
+    initialView: 'dayGridMonth',
+    height: 500,
+    events: getTasks().map(t => ({
+      title: t.name,
+      start: t.start,
+      end: t.end
+    }))
+  });
+  calendar.render();
+}
+
+function getTasks() {
+  return JSON.parse(localStorage.getItem('tasks') || '[]');
 }
 </script>
 </body>
