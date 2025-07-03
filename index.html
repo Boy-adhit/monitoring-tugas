@@ -62,7 +62,17 @@
   </div>
 
 <script>
-// ... seluruh kode sebelumnya tetap, ganti fungsi checkUpcomingDeadlines:
+function showTab(tabId) {
+  const tabs = ['daftar', 'statistik', 'kalender', 'arsip'];
+  tabs.forEach(id => {
+    document.getElementById(id).classList.add('hidden');
+    document.getElementById('tab-' + id).classList.remove('bg-blue-500', 'text-white');
+    document.getElementById('tab-' + id).classList.add('bg-gray-300', 'dark:bg-gray-700');
+  });
+  document.getElementById(tabId).classList.remove('hidden');
+  document.getElementById('tab-' + tabId).classList.remove('bg-gray-300', 'dark:bg-gray-700');
+  document.getElementById('tab-' + tabId).classList.add('bg-blue-500', 'text-white');
+}
 
 function checkUpcomingDeadlines() {
   const now = new Date();
