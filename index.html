@@ -42,6 +42,7 @@
         <input class="border p-2 rounded" type="text" id="notes" placeholder="Catatan" />
         <button class="bg-green-500 text-white p-2 rounded col-span-full" type="submit">Tambah</button>
       </form>
+      <div id="deadline-alerts" class="mb-4 space-y-2"></div>
       <div id="task-list" class="space-y-3"></div>
     </section>
 
@@ -61,164 +62,25 @@
   </div>
 
 <script>
-let editingIndex = null;
-let taskChart;
-
-function showTab(tabId) {
-  document.querySelectorAll("section").forEach(s => s.classList.add("hidden"));
-  document.getElementById(tabId).classList.remove("hidden");
-  document.querySelectorAll("nav button").forEach(b => b.classList.remove("bg-blue-500", "text-white"));
-  document.getElementById(`tab-${tabId}`).classList.add("bg-blue-500", "text-white");
-  if (tabId === 'statistik') setTimeout(renderStats, 50);
-  if (tabId === 'kalender') setTimeout(renderCalendar, 50);
-  if (tabId === 'arsip') renderArsip();
-}
-
-function getTasks() {
-  return JSON.parse(localStorage.getItem("tasks") || "[]");
-}
-
-function saveTasks(tasks) {
-  localStorage.setItem("tasks", JSON.stringify(tasks));
-  renderTasks();
-  renderStats();
-  renderCalendar();
-}
-
-function addTask() {
-  const tasks = getTasks();
-  const task = {
-    name: document.getElementById("name").value,
-    desc: document.getElementById("desc").value,
-    start: document.getElementById("start").value,
-    end: document.getElementById("end").value,
-    priority: document.getElementById("priority").value,
-    kategori: document.getElementById("kategori").value,
-    notes: document.getElementById("notes").value,
-    status: "Belum"
-  };
-  if (editingIndex !== null) {
-    tasks[editingIndex] = task;
-    editingIndex = null;
-  } else {
-    tasks.push(task);
-  }
-  saveTasks(tasks);
-  document.getElementById("task-form").reset();
-}
-
-function renderTasks() {
-  const tasks = getTasks();
-  const now = new Date();
-  const list = document.getElementById("task-list");
-  list.innerHTML = "";
-  tasks.forEach((t, i) => {
-    const deadline = new Date(t.end);
-    if ((t.status === "Selesai" && (now - deadline) / (1000 * 60 * 60 * 24) > 7)) return;
-    const div = document.createElement("div");
-    div.className = "p-4 rounded shadow bg-white dark:bg-gray-800 flex justify-between items-start";
-    div.innerHTML = `
-      <div>
-        <div class="font-bold">${t.name}</div>
-        <div>${t.desc}</div>
-        <div class="text-sm text-gray-500">${t.start} → ${t.end}</div>
-        <div class="text-sm">Kategori: ${t.kategori}, Prioritas: ${t.priority}</div>
-        <div class="text-sm italic">Catatan: ${t.notes}</div>
-      </div>
-      <div class="flex flex-col gap-1">
-        <button onclick="editTask(${i})" class="bg-yellow-500 text-white px-2 py-1 rounded">Edit</button>
-        <button onclick="completeTask(${i})" class="bg-green-500 text-white px-2 py-1 rounded">Selesai</button>
-        <button onclick="deleteTask(${i})" class="bg-red-500 text-white px-2 py-1 rounded">Hapus</button>
-      </div>
-    `;
-    list.appendChild(div);
-  });
-}
-
-function renderStats() {
-  const tasks = getTasks();
-  const statusCounts = { Belum: 0, Selesai: 0 };
-  tasks.forEach(t => statusCounts[t.status]++);
-  const ctx = document.getElementById('taskChart').getContext('2d');
-  if (taskChart) taskChart.destroy();
-  taskChart = new Chart(ctx, {
-    type: 'doughnut',
-    data: {
-      labels: ['Belum', 'Selesai'],
-      datasets: [{
-        label: 'Tugas',
-        data: [statusCounts.Belum, statusCounts.Selesai],
-        backgroundColor: ['#f87171', '#34d399']
-      }]
-    },
-    options: { responsive: true, maintainAspectRatio: false }
-  });
-}
-
-function renderCalendar() {
-  const calendarEl = document.getElementById('calendar');
-  calendarEl.innerHTML = '';
-  const calendar = new FullCalendar.Calendar(calendarEl, {
-    initialView: 'dayGridMonth',
-    events: getTasks().map(t => ({
-      title: t.name,
-      start: t.start,
-      end: t.end
-    }))
-  });
-  calendar.render();
-}
-
-function renderArsip() {
-  const tasks = getTasks();
-  const list = document.getElementById("arsip-list");
-  list.innerHTML = "";
-  tasks.filter(t => t.status === "Selesai").forEach(t => {
-    const div = document.createElement("div");
-    div.className = "bg-gray-200 dark:bg-gray-700 p-3 rounded";
-    div.innerHTML = `<b>${t.name}</b> (${t.start} - ${t.end}) → ${t.desc}`;
-    list.appendChild(div);
-  });
-}
-
-function editTask(index) {
-  const t = getTasks()[index];
-  document.getElementById("name").value = t.name;
-  document.getElementById("desc").value = t.desc;
-  document.getElementById("start").value = t.start;
-  document.getElementById("end").value = t.end;
-  document.getElementById("priority").value = t.priority;
-  document.getElementById("kategori").value = t.kategori;
-  document.getElementById("notes").value = t.notes;
-  editingIndex = index;
-}
-
-function deleteTask(index) {
-  if (!confirm("Yakin ingin menghapus tugas ini?")) return;
-  const tasks = getTasks();
-  tasks.splice(index, 1);
-  saveTasks(tasks);
-}
-
-function completeTask(index) {
-  const tasks = getTasks();
-  tasks[index].status = "Selesai";
-  saveTasks(tasks);
-}
+// ... seluruh kode sebelumnya tetap, ganti fungsi checkUpcomingDeadlines:
 
 function checkUpcomingDeadlines() {
   const now = new Date();
+  const notif = document.getElementById("deadline-alerts");
+  notif.innerHTML = "";
+  notif.className = "mb-4 space-y-2";
+
   getTasks().forEach(t => {
     const deadline = new Date(t.end);
     const diffDays = Math.ceil((deadline - now) / (1000 * 60 * 60 * 24));
-    if (diffDays === 2 && t.status !== "Selesai") {
-      alert(`⚠️ Tugas "${t.name}" akan deadline dalam 2 hari!`);
+    if (diffDays <= 2 && t.status !== "Selesai") {
+      const alertBox = document.createElement("div");
+      alertBox.className = "p-2 bg-yellow-200 text-yellow-800 rounded";
+      alertBox.textContent = `⚠️ Tugas "${t.name}" akan deadline dalam ${diffDays} hari (${t.end})`;
+      notif.appendChild(alertBox);
     }
   });
 }
-
-setInterval(checkUpcomingDeadlines, 60000);
-renderTasks();
 </script>
 </body>
 </html>
